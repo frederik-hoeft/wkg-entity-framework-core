@@ -8,7 +8,7 @@ namespace Wkg.EntityFrameworkCore.Configuration.Discovery;
 /// </summary>
 public interface IEntityDiscoveryContext
 {
-    internal IDictionary<Type, EntityTypeBuilder> EntityBuilderCache { get; }
+    internal IReadOnlyDictionary<Type, EntityTypeBuilder> EntityBuilderCache { get; }
 
     /// <summary>
     /// The policies to enforce on discovered entities.
@@ -19,4 +19,11 @@ public interface IEntityDiscoveryContext
     /// Audits all discovered entities for compliance with the policies and takes corresponding actions if necessary.
     /// </summary>
     void AuditPolicies();
+
+    /// <summary>
+    /// Registers a discovered entity type along with its builder.
+    /// </summary>
+    /// <param name="entityType">The entity type.</param>
+    /// <param name="builder">The entity type builder.</param>
+    internal protected void Register(Type entityType, EntityTypeBuilder builder);
 }

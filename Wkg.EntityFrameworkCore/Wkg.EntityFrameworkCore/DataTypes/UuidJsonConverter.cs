@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Wkg.EntityFrameworkCore.DataTypes;
 
-internal class UuidJsonConverter : JsonConverter<Uuid>
+internal sealed class UuidJsonConverter : JsonConverter<Uuid>
 {
     public override Uuid Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

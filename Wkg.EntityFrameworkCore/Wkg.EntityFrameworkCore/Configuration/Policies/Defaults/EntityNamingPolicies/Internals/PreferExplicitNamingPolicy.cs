@@ -3,7 +3,7 @@ using Wkg.Logging;
 
 namespace Wkg.EntityFrameworkCore.Configuration.Policies.Defaults.EntityNamingPolicies.Internals;
 
-internal class PreferExplicitNamingPolicy : ExplicitNamingPolicy
+internal sealed class PreferExplicitNamingPolicy : ExplicitNamingPolicy
 {
     public override void Audit(IMutableEntityType entityType)
     {

@@ -4,7 +4,7 @@ using Wkg.EntityFrameworkCore.Configuration.Reflection.Discovery;
 
 namespace Wkg.EntityFrameworkCore.Configuration;
 
-internal class ModelOptionsBuilder : IModelOptionsBuilder
+internal sealed class ModelOptionsBuilder : IModelOptionsBuilder
 {
     private bool _discoveryOptionsConfigured;
     private bool _policyOptionsConfigured;

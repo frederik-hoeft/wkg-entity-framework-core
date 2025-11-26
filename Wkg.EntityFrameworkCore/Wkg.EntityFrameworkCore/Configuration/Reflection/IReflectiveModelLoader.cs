@@ -4,7 +4,7 @@ using Wkg.EntityFrameworkCore.Configuration.Reflection.Discovery;
 
 namespace Wkg.EntityFrameworkCore.Configuration.Reflection;
 
-internal interface IReflectiveEntityLoader
+internal interface IReflectiveModelLoader
 {
-    void LoadEntities(ModelBuilder builder, IEntityDiscoveryContext discoveryContext, DiscoveryOptions options);
+    void LoadModels(ModelBuilder builder, IEntityDiscoveryContext discoveryContext, DiscoveryOptions options);
 }

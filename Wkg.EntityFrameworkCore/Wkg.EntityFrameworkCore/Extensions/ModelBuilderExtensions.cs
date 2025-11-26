@@ -7,6 +7,7 @@ using Wkg.EntityFrameworkCore.Configuration.Discovery;
 using Wkg.EntityFrameworkCore.Configuration.Policies;
 using Wkg.EntityFrameworkCore.Configuration.Policies.Defaults.PropertyMappingPolicies;
 using Wkg.EntityFrameworkCore.Configuration.Policies.Defaults.EntityNamingPolicies;
+using Wkg.EntityFrameworkCore.Configuration.Policies.Builder;
 
 namespace Wkg.EntityFrameworkCore.Extensions;
 
@@ -35,9 +36,10 @@ public static class ModelBuilderExtensions
     public static ModelBuilder LoadModel<TModel>(this ModelBuilder builder, IEntityDiscoveryContext? discoveryContext = null)
         where TModel : class, IModelConfiguration<TModel>
     {
+        ArgumentNullException.ThrowIfNull(builder);
         EntityTypeBuilder<TModel> entityBuilder = builder.Entity<TModel>();
         TModel.Configure(entityBuilder);
-        discoveryContext?.EntityBuilderCache.Add(typeof(TModel), entityBuilder);
+        discoveryContext?.Register(typeof(TModel), entityBuilder);
         return builder;
     }
 
@@ -56,21 +58,47 @@ public static class ModelBuilderExtensions
         where TLeft : class, IModelConfiguration<TLeft>
         where TRight : class, IModelConfiguration<TRight>
     {
+        ArgumentNullException.ThrowIfNull(builder);
         TConnection.Connect(builder.Entity<TLeft>(), builder.Entity<TRight>());
-        discoveryContext?.EntityBuilderCache.Add(typeof(TConnection), builder.Entity<TConnection>());
+        discoveryContext?.Register(typeof(TConnection), builder.Entity<TConnection>());
         return builder;
     }
 
     /// <summary>
-    /// Loads and configures all models that implement <see cref="IReflectiveModelConfiguration{T}"/>.
+    /// Loads models using the specified <paramref name="loader"/> validates them against the configured policies.
+    /// </summary>
+    /// <param name="builder">The model builder.</param>
+    /// <param name="loader">The model loader to load the models from.</param>
+    /// <param name="configurePolicies">The policies to configure the discovery process.</param>
+    /// <returns>The model builder.</returns>
+    public static ModelBuilder LoadModels(this ModelBuilder builder, IModelLoader loader, Action<IPolicyOptionsBuilder>? configurePolicies = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(loader);
+
+        IPolicyOptionsBuilder policyOptionsBuilder = new PolicyOptionsBuilder();
+        configurePolicies?.Invoke(policyOptionsBuilder);
+
+        EntityNaming.AddDefaults(policyOptionsBuilder);
+        PropertyMapping.AddDefaults(policyOptionsBuilder);
+
+        IEntityPolicy[] policies = policyOptionsBuilder.Build();
+        EntityDiscoveryContext discoveryContext = new(policies);
+        loader.LoadModels(builder, discoveryContext);
+        discoveryContext.AuditPolicies();
+        return builder;
+    }
+
+    /// <summary>
+    /// Loads and configures all models that implement <see cref="IDiscoverableModelConfiguration{T}"/>.
     /// </summary>
     /// <param name="builder">The model builder.</param>
     /// <param name="configureOptions">The options to configure the discovery process.</param>
     /// <returns>The model builder.</returns>
     /// <remarks>
     /// <para>
-    /// This method uses reflection to find all types that implement <see cref="IReflectiveModelConfiguration{T}"/> and then loads and configures them.
-    /// Models implementing <see cref="IReflectiveModelConfiguration{T}"/> should not be loaded explicitly using <see cref="LoadModel{TModel}(ModelBuilder, IEntityDiscoveryContext)"/>.
+    /// This method uses reflection to find all types that implement <see cref="IDiscoverableModelConfiguration{T}"/> and then loads and configures them.
+    /// Models implementing <see cref="IDiscoverableModelConfiguration{T}"/> should not be loaded explicitly using <see cref="LoadModel{TModel}(ModelBuilder, IEntityDiscoveryContext)"/>.
     /// </para>
     /// </remarks>
     public static ModelBuilder LoadReflectiveModels(this ModelBuilder builder, Action<IModelOptionsBuilder>? configureOptions) =>
@@ -78,7 +106,7 @@ public static class ModelBuilderExtensions
 
     private static ModelBuilder LoadReflectiveModelsInternal(this ModelBuilder builder, Action<IModelOptionsBuilder>? configureOptions)
     {
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        ArgumentNullException.ThrowIfNull(builder);
 
         ModelOptionsBuilder modelOptions = new();
         configureOptions?.Invoke(modelOptions);

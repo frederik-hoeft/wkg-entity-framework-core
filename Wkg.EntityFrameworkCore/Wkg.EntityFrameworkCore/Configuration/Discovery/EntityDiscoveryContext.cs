@@ -18,9 +18,10 @@ namespace Wkg.EntityFrameworkCore.Configuration.Discovery;
 public class EntityDiscoveryContext(IEntityPolicy[] policies) : IReflectiveEntityDiscoveryContext
 {
     private static readonly ConditionalWeakTable<ModelBuilder, HashSet<Type>?> s_loadedDatabaseEngines = [];
-    private readonly Dictionary<Type, IReflectiveEntityLoader> _loaders = [];
+    private readonly Dictionary<Type, IReflectiveModelLoader> _loaders = [];
+    private readonly Dictionary<Type, EntityTypeBuilder> _entityBuilderCache = [];
 
-    IDictionary<Type, EntityTypeBuilder> IEntityDiscoveryContext.EntityBuilderCache { get; } = new Dictionary<Type, EntityTypeBuilder>();
+    IReadOnlyDictionary<Type, EntityTypeBuilder> IEntityDiscoveryContext.EntityBuilderCache => _entityBuilderCache;
 
     /// <inheritdoc/>
     public IEntityPolicy[] Policies => policies;
@@ -64,7 +65,7 @@ public class EntityDiscoveryContext(IEntityPolicy[] policies) : IReflectiveEntit
         Log.WriteInfo($"Audit completed. {self.EntityBuilderCache.Count} entities loaded and configured.");
     }
 
-    void IReflectiveEntityDiscoveryContext.AddLoader(IReflectiveEntityLoader loader) => _loaders.Add(loader.GetType(), loader);
+    void IReflectiveEntityDiscoveryContext.AddLoader(IReflectiveModelLoader loader) => _loaders.Add(loader.GetType(), loader);
 
     void IReflectiveDiscoveryContext.Discover(ModelBuilder builder, DiscoveryOptions options)
     {
@@ -96,9 +97,17 @@ public class EntityDiscoveryContext(IEntityPolicy[] policies) : IReflectiveEntit
             loadedDatabaseEngines = options.TargetDatabaseEngineAttributes.Length == 0 ? null : [];
             s_loadedDatabaseEngines.Add(builder, loadedDatabaseEngines);
         }
-        foreach (IReflectiveEntityLoader loader in _loaders.Values)
+        foreach (IReflectiveModelLoader loader in _loaders.Values)
         {
-            loader.LoadEntities(builder, this, options);
+            loader.LoadModels(builder, this, options);
+        }
+    }
+
+    void IEntityDiscoveryContext.Register(Type entityType, EntityTypeBuilder builder)
+    {
+        if (!_entityBuilderCache.TryAdd(entityType, builder))
+        {
+            throw new InvalidOperationException($"The entity type {entityType.FullName} has already been registered.");
         }
     }
 }

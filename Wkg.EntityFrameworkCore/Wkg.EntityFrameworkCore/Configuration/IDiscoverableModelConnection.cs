@@ -9,7 +9,7 @@ namespace Wkg.EntityFrameworkCore.Configuration;
 /// <typeparam name="TConnection">The type of the implementing connection entity.</typeparam>
 /// <typeparam name="TLeft">The type of the left entity.</typeparam>
 /// <typeparam name="TRight">The type of the right entity.</typeparam>
-public interface IReflectiveModelConnection<TConnection, TLeft, TRight> : IModelConnection<TConnection, TLeft, TRight>
-    where TConnection : class, IReflectiveModelConnection<TConnection, TLeft, TRight>
-    where TLeft : class, IReflectiveModelConfiguration<TLeft>
-    where TRight : class, IReflectiveModelConfiguration<TRight>;
+public interface IDiscoverableModelConnection<TConnection, TLeft, TRight> : IModelConnection<TConnection, TLeft, TRight>
+    where TConnection : class, IDiscoverableModelConnection<TConnection, TLeft, TRight>
+    where TLeft : class, IDiscoverableModelConfiguration<TLeft>
+    where TRight : class, IDiscoverableModelConfiguration<TRight>;

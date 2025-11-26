@@ -2,7 +2,7 @@
 
 namespace Wkg.EntityFrameworkCore.ProcedureMapping.Builder.ThrowHelpers;
 
-internal class ProcedureBuilderThrowHelper<TProcedure> : ThrowHelperBase, IProcedureThrowHelper
+internal sealed class ProcedureBuilderThrowHelper<TProcedure> : ThrowHelperBase, IProcedureThrowHelper
 {
     protected override string TargetSite { get; } = $"In procedure or function '{typeof(TProcedure).Name}'";
 

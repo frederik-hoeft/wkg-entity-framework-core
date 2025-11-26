@@ -2,7 +2,7 @@
 
 namespace Wkg.EntityFrameworkCore.Configuration.Policies.Defaults.EntityNamingPolicies.Internals;
 
-internal class RequireExplicitNamingPolicy : ExplicitNamingPolicy
+internal sealed class RequireExplicitNamingPolicy : ExplicitNamingPolicy
 {
     public override void Audit(IMutableEntityType entityType)
     {

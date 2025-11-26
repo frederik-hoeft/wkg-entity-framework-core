@@ -2,7 +2,7 @@
 
 namespace Wkg.EntityFrameworkCore.ProcedureMapping.Builder.ThrowHelpers;
 
-internal class ResultBuilderThrowHelper(Type procedure, Type result) : ThrowHelperBase, IResultThrowHelper
+internal sealed class ResultBuilderThrowHelper(Type procedure, Type result) : ThrowHelperBase, IResultThrowHelper
 {
     protected override string TargetSite { get; } = $"Result '{result.Name}' in procedure or function '{procedure.Name}'";
 

@@ -12,4 +12,4 @@ namespace Wkg.EntityFrameworkCore.Configuration;
 /// This interface must be implemented by the entity to be configured.
 /// </para>
 /// </remarks>
-public interface IReflectiveModelConfiguration<T> : IModelConfiguration<T> where T : class, IReflectiveModelConfiguration<T>;
+public interface IDiscoverableModelConfiguration<T> : IModelConfiguration<T> where T : class, IDiscoverableModelConfiguration<T>;

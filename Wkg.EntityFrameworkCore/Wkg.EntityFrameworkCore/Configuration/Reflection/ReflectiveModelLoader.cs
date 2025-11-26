@@ -9,19 +9,19 @@ using Wkg.EntityFrameworkCore.Configuration.Discovery;
 namespace Wkg.EntityFrameworkCore.Configuration.Reflection;
 
 /// <summary>
-/// Loads and configures all <see cref="IReflectiveModelConfiguration{T}"/> implementations.
+/// Loads and configures all <see cref="IDiscoverableModelConfiguration{T}"/> implementations.
 /// </summary>
-internal class ReflectiveModelLoader : ReflectiveLoaderBase, IReflectiveEntityLoader
+internal sealed class ReflectiveModelLoader : ReflectiveLoaderBase, IReflectiveModelLoader
 {
-    public static readonly string s_runtimeMethodName = $"{typeof(IReflectiveBaseModelConfiguration<>).Namespace}.{nameof(IReflectiveBaseModelConfiguration<>)}<{{0}}>.{nameof(IReflectiveBaseModelConfiguration<>.ConfigureBaseModel)}";
+    public static readonly string s_runtimeMethodName = $"{typeof(IDiscoverableBaseModelConfiguration<>).Namespace}.{nameof(IDiscoverableBaseModelConfiguration<>)}<{{0}}>.{nameof(IDiscoverableBaseModelConfiguration<>.ConfigureBaseModel)}";
 
     /// <summary>
-    /// Loads and configures all <see cref="IReflectiveModelConfiguration{T}"/> implementations.
+    /// Loads and configures all <see cref="IDiscoverableModelConfiguration{T}"/> implementations.
     /// </summary>
     /// <param name="builder">The <see cref="ModelBuilder"/> to configure.</param>
     /// <param name="discoveryContext">The <see cref="IEntityDiscoveryContext"/> to use for discovery.</param>
     /// <param name="options">The options to use for discovery.</param>
-    public void LoadEntities(ModelBuilder builder, IEntityDiscoveryContext discoveryContext, DiscoveryOptions options)
+    public void LoadModels(ModelBuilder builder, IEntityDiscoveryContext discoveryContext, DiscoveryOptions options)
     {
         Assembly[]? targetAssemblies = null;
         if (options.TargetAssemblies.Length > 0)
@@ -40,7 +40,7 @@ internal class ReflectiveModelLoader : ReflectiveLoaderBase, IReflectiveEntityLo
                     // only keep classes
                     type.IsClass
                     // only keep classes that implement IReflectiveModelConfiguration<T> where T is that exact class
-                    && type.ImplementsDirectGenericInterfaceWithTypeParameter(typeof(IReflectiveModelConfiguration<>), type)
+                    && type.ImplementsDirectGenericInterfaceWithTypeParameter(typeof(IDiscoverableModelConfiguration<>), type)
                     // only keep classes that have the specified database engine attribute if enabled
                     && (dbEngineModelAttributeTypes.Length == 0 || dbEngineModelAttributeTypes.Any(databaseEngineAttributeType => type.GetCustomAttribute(databaseEngineAttributeType) is not null))))
             // just to be sure...
@@ -51,7 +51,7 @@ internal class ReflectiveModelLoader : ReflectiveLoaderBase, IReflectiveEntityLo
                 // get the exact Configure method declared by IModelConfiguration<T>
                 Configure: type.GetMethod
                 (
-                    nameof(IReflectiveModelConfiguration<>.Configure),
+                    nameof(IDiscoverableModelConfiguration<>.Configure),
                     BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly,
                     [typeof(EntityTypeBuilder<>).MakeGenericType(type)])
                 ))
@@ -75,12 +75,12 @@ internal class ReflectiveModelLoader : ReflectiveLoaderBase, IReflectiveEntityLo
             parameters[0] = entityTypeBuilderObj!;
             // invoke the Configure method with the EntityTypeBuilder<T> instance
             entity.Configure!.Invoke(null, parameters);
-            // check if this entity inherits a parent class that implements IReflectiveBaseModelConfiguration
+            // check if this entity inherits a parent class that implements IDiscoverableBaseModelConfiguration
             Type? baseType = entity.Type.BaseType;
             while (baseType is not null)
             {
-                // recurse up the inheritance tree and look for any base class that implements IReflectiveBaseModelConfiguration<T> where T is the base class
-                if (baseType.ImplementsDirectGenericInterfaceWithTypeParameter(typeof(IReflectiveBaseModelConfiguration<>), baseType))
+                // recurse up the inheritance tree and look for any base class that implements IDiscoverableBaseModelConfiguration<T> where T is the base class
+                if (baseType.ImplementsDirectGenericInterfaceWithTypeParameter(typeof(IDiscoverableBaseModelConfiguration<>), baseType))
                 {
                     Log.WriteDiagnostic($"{nameof(ReflectiveModelLoader)} found base model: {baseType.Name}.");
                     // load the base model using the explicit interface implementation
@@ -103,7 +103,7 @@ internal class ReflectiveModelLoader : ReflectiveLoaderBase, IReflectiveEntityLo
             }
             // enforce policies
             EntityTypeBuilder entityTypeBuilder = (EntityTypeBuilder)entityTypeBuilderObj;
-            discoveryContext.EntityBuilderCache.Add(entity.Type, entityTypeBuilder);
+            discoveryContext.Register(entity.Type, entityTypeBuilder);
             Log.WriteDiagnostic($"{nameof(ReflectiveModelLoader)} loaded: {entity.Type.Name}.");
         }
         Log.WriteInfo($"{nameof(ReflectiveModelLoader)} loaded {entities.Length} models and {baseModelsLoaded} base model definitions.");

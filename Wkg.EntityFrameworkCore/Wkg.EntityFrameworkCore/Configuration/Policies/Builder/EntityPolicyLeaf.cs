@@ -1,6 +1,6 @@
 ﻿namespace Wkg.EntityFrameworkCore.Configuration.Policies.Builder;
 
-internal class EntityPolicyLeaf(IEntityPolicy policy) : IEntityPolicyComponent
+internal sealed class EntityPolicyLeaf(IEntityPolicy policy) : IEntityPolicyComponent
 {
     List<IEntityPolicy> IEntityPolicyComponent.AddToAggregation(List<IEntityPolicy> aggregation)
     {

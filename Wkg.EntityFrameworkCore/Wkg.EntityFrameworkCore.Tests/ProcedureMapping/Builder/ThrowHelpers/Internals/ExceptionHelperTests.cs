@@ -1,10 +1,11 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System.Diagnostics.CodeAnalysis;
 using Wkg.EntityFrameworkCore.ProcedureMapping.Builder.ThrowHelpers.Internals;
 
 namespace Wkg.EntityFrameworkCore.Tests.ProcedureMapping.Builder.ThrowHelpers.Internals;
 
 [TestClass]
-public class ExceptionHelperTests
+[SuppressMessage("Usage", "CA2201:Do not raise reserved exception types", Justification = "Testing purposes only")]
+public sealed class ExceptionHelperTests
 {
     private const string ORIGINAL_MESSAGE = "Original message";
     private const string ORIGINAL_PARAM = "originalParam";
@@ -75,7 +76,7 @@ public class ExceptionHelperTests
         ExceptionHelper.SetExceptionMessage(argumentException, NEW_MESSAGE);
         ExceptionHelper.SetArgumentName(argumentException, NEW_PARAM);
         // Assert
-        Assert.IsTrue(argumentException.Message.StartsWith(NEW_MESSAGE), $"Message should start with '{NEW_MESSAGE}'");
+        Assert.StartsWith(NEW_MESSAGE, argumentException.Message, $"Message should start with '{NEW_MESSAGE}'");
         Assert.AreEqual(NEW_PARAM, argumentException.ParamName);
     }
 
@@ -99,7 +100,7 @@ public class ExceptionHelperTests
         ExceptionHelper.SetExceptionMessage(argumentException, NEW_MESSAGE);
         ExceptionHelper.SetArgumentName(argumentException, NEW_PARAM);
         // Assert
-        Assert.IsTrue(argumentException.Message.StartsWith(NEW_MESSAGE), $"Message should start with '{NEW_MESSAGE}'");
+        Assert.StartsWith(NEW_MESSAGE, argumentException.Message, $"Message should start with '{NEW_MESSAGE}'");
         Assert.AreEqual(NEW_PARAM, argumentException.ParamName);
     }
 }
