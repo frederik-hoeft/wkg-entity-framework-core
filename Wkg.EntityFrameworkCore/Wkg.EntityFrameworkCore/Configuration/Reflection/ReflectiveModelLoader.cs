@@ -13,6 +13,8 @@ namespace Wkg.EntityFrameworkCore.Configuration.Reflection;
 /// </summary>
 internal class ReflectiveModelLoader : ReflectiveLoaderBase, IReflectiveEntityLoader
 {
+    public static readonly string s_runtimeMethodName = $"{typeof(IReflectiveBaseModelConfiguration<>).Namespace}.{nameof(IReflectiveBaseModelConfiguration<>)}<{{0}}>.{nameof(IReflectiveBaseModelConfiguration<>.ConfigureBaseModel)}";
+
     /// <summary>
     /// Loads and configures all <see cref="IReflectiveModelConfiguration{T}"/> implementations.
     /// </summary>
@@ -29,7 +31,9 @@ internal class ReflectiveModelLoader : ReflectiveLoaderBase, IReflectiveEntityLo
         Type[] dbEngineModelAttributeTypes = options.TargetDatabaseEngineAttributes;
         Log.WriteInfo($"{nameof(ReflectiveModelLoader)} is initializing.");
 
-        ReflectiveEntity[] entities = TargetAssembliesOrWithEntryPoint(targetAssemblies)
+        ReflectiveEntity[] entities = 
+        [
+            .. TargetAssembliesOrWithEntryPoint(targetAssemblies)
             // get all types in these assemblies
             .SelectMany(asm => asm.GetTypes()
                 .Where(type =>
@@ -47,12 +51,12 @@ internal class ReflectiveModelLoader : ReflectiveLoaderBase, IReflectiveEntityLo
                 // get the exact Configure method declared by IModelConfiguration<T>
                 Configure: type.GetMethod
                 (
-                    nameof(ModelConfigInfoForReflection_DontChange.Configure),
+                    nameof(IReflectiveModelConfiguration<>.Configure),
                     BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly,
                     [typeof(EntityTypeBuilder<>).MakeGenericType(type)])
                 ))
             .Where(entity => entity.Configure is not null)
-            .ToArray();
+        ];
 
         Log.WriteInfo($"{nameof(ReflectiveModelLoader)} discovered {entities.Length} models.");
 
@@ -82,7 +86,7 @@ internal class ReflectiveModelLoader : ReflectiveLoaderBase, IReflectiveEntityLo
                     // load the base model using the explicit interface implementation
                     // we have to do some trickery to get the correct method as it's name is compiler generated.
                     // it would be better to do this using the method table / InterfaceMapping but that just dies with some IL format error.
-                    string methodName = string.Format(BaseModelConfigInfoForReflection_DontChange.s_runtimeMethodName, baseType.FullName);
+                    string methodName = string.Format(s_runtimeMethodName, baseType.FullName);
                     // we can't filter by arguments as the generic type is not known yet
                     MethodInfo? baseConfigure = baseType.GetMethod(methodName, BindingFlags.Static | BindingFlags.NonPublic);
                     if (baseConfigure is not null)
@@ -105,19 +109,4 @@ internal class ReflectiveModelLoader : ReflectiveLoaderBase, IReflectiveEntityLo
         Log.WriteInfo($"{nameof(ReflectiveModelLoader)} loaded {entities.Length} models and {baseModelsLoaded} base model definitions.");
         Log.WriteInfo($"{nameof(ReflectiveModelLoader)} is exiting.");
     }
-}
-
-file class ModelConfigInfoForReflection_DontChange : IReflectiveModelConfiguration<ModelConfigInfoForReflection_DontChange>
-{
-    public static void Configure(EntityTypeBuilder<ModelConfigInfoForReflection_DontChange> _) => throw new NotImplementedException();
-}
-
-file class BaseModelConfigInfoForReflection_DontChange : IReflectiveBaseModelConfiguration<BaseModelConfigInfoForReflection_DontChange>
-{
-    public const string METHOD_NAME = nameof(IReflectiveBaseModelConfiguration<BaseModelConfigInfoForReflection_DontChange>.ConfigureBaseModel);
-    public const string INTERFACE_NAME = nameof(IReflectiveBaseModelConfiguration<BaseModelConfigInfoForReflection_DontChange>);
-    public static readonly string s_runtimeMethodName = $"{typeof(IReflectiveBaseModelConfiguration<>).Namespace}.{INTERFACE_NAME}<{{0}}>.{METHOD_NAME}";
-
-    static void IReflectiveBaseModelConfiguration<BaseModelConfigInfoForReflection_DontChange>.ConfigureBaseModel<TChildClass>(EntityTypeBuilder<TChildClass> self) => 
-        throw new NotImplementedException();
 }
