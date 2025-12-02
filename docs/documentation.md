@@ -227,11 +227,11 @@ public sealed class MyDbContext(DbContextOptions<MyDbContext> options) : DbConte
 
 Configuration options:
 
-- `TargetAssemblies`: names of assemblies to scan. If `null`, scans all assemblies in the current compilation.
+- `TargetAssemblies`: names of assemblies to scan. If `null` or empty, only the assembly containing the generated loader is scanned.
 - `AssemblyDiscoveryFailureBehavior`: controls diagnostics when a target assembly is missing or contains no valid models.
   - `Silent`: no message, continue.
   - `Info`: informational diagnostic, continue.
-  - `Warning`: warning diagnostic, continue.
+  - `Warning`: warning diagnostic, continue unless `TreatWarningsAsErrors` is enabled.
   - `Error`: compilation error, abort build.
 - `ModelDiscoveryFilterAttribute<T>`: include only models decorated with attribute `T`. Apply multiple filters to union accepted attributes.
 
