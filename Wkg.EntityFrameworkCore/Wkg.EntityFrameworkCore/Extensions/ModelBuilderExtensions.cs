@@ -83,12 +83,12 @@ public static class ModelBuilderExtensions
         /// <summary>
         /// Loads seed data for the specified <typeparamref name="TModel"/> model using the specified <typeparamref name="TDataSeed"/>.
         /// </summary>
-        /// <typeparam name="TDataSeed">The type of the data seed.</typeparam>
         /// <typeparam name="TModel">The type of the model.</typeparam>
+        /// <typeparam name="TDataSeed">The type of the data seed.</typeparam>
         /// <returns>The model builder.</returns>
-        public ModelBuilder LoadDataSeed<TDataSeed, TModel>() 
-            where TDataSeed : IModelDataSeed<TModel>
+        public ModelBuilder LoadDataSeed<TModel, TDataSeed>() 
             where TModel : class, IModelConfiguration<TModel>
+            where TDataSeed : IModelDataSeed<TModel>
         {
             ArgumentNullException.ThrowIfNull(self);
             self.Entity<TModel>().HasData(TDataSeed.GetSeedData());

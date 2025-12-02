@@ -2,42 +2,49 @@
 
 `Wkg.EntityFrameworkCore` is a library that provides reflective entity configuration and procedure mapping for Entity Framework Core, as well as other re-usable components not directly related to [RECAP](./RECAP-paper.pdf).
 
-- [`Wkg.EntityFrameworkCore` Documentation](#wkgentityframeworkcore-documentation)
-  - [Getting Started](#getting-started)
-    - [Requirements](#requirements)
-    - [Installation](#installation)
-  - [Usage](#usage)
-    - [Entity Configuration](#entity-configuration)
-      - [Mapping Entities with RECAP](#mapping-entities-with-recap)
-        - [Entity Definition](#entity-definition)
-        - [Entity Mapping](#entity-mapping)
-      - [Entity Discovery](#entity-discovery)
-        - [Reflective Entity Discovery](#reflective-entity-discovery)
-        - [Manual Entity Registration](#manual-entity-registration)
-      - [Configuring Inheritance Hierarchies](#configuring-inheritance-hierarchies)
-        - [Table Per Hierarchy (TPH)](#table-per-hierarchy-tph)
-        - [Table Per Type (TPT)](#table-per-type-tpt)
-        - [Table Per Concrete Type (TPC)](#table-per-concrete-type-tpc)
-      - [Configuring Many-to-Many Relationships](#configuring-many-to-many-relationships)
-        - [Entity Definitions](#entity-definitions)
-        - [Connection Entity Definition](#connection-entity-definition)
-        - [Connection Entity Discovery](#connection-entity-discovery)
-          - [Reflective Connection Discovery](#reflective-connection-discovery)
-          - [Manual Connection Registration](#manual-connection-registration)
-      - [Enforcing Policies](#enforcing-policies)
-        - [Naming Policies](#naming-policies)
-        - [Mapping Policies](#mapping-policies)
-        - [Inheritance Policies](#inheritance-policies)
-        - [Custom Policies](#custom-policies)
-          - [Example: Code-First Naming with Snake Case](#example-code-first-naming-with-snake-case)
-          - [Example: Ensure All UUID Properties are Database-Generated](#example-ensure-all-uuid-properties-are-database-generated)
-          - [Example: Automatically Ignoring Navigation Properties during JSON Serialization](#example-automatically-ignoring-navigation-properties-during-json-serialization)
-    - [Stored Procedure Mapping](#stored-procedure-mapping)
-      - [Getting Started with PCO Mapping](#getting-started-with-pco-mapping)
-        - [Mapping a Database Function](#mapping-a-database-function)
-        - [Mapping a Stored Procedure](#mapping-a-stored-procedure)
-      - [PCO Discovery](#pco-discovery)
-    - [Executing PCOs](#executing-pcos)
+<!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
+
+<!-- code_chunk_output -->
+
+- [Getting Started](#getting-started)
+  - [Requirements](#requirements)
+  - [Installation](#installation)
+- [Usage](#usage)
+  - [Entity Configuration](#entity-configuration)
+    - [Mapping Entities with RECAP](#mapping-entities-with-recap)
+      - [Entity Definition](#entity-definition)
+      - [Entity Mapping](#entity-mapping)
+    - [Entity Discovery](#entity-discovery)
+      - [Reflective Entity Discovery](#reflective-entity-discovery)
+      - [Source-Generator Discovery](#source-generator-discovery)
+      - [Manual Entity Registration](#manual-entity-registration)
+    - [Configuring Inheritance Hierarchies](#configuring-inheritance-hierarchies)
+      - [Table Per Hierarchy (TPH)](#table-per-hierarchy-tph)
+      - [Table Per Type (TPT)](#table-per-type-tpt)
+      - [Table Per Concrete Type (TPC)](#table-per-concrete-type-tpc)
+    - [Configuring Many-to-Many Relationships](#configuring-many-to-many-relationships)
+      - [Entity Definitions](#entity-definitions)
+      - [Connection Entity Definition](#connection-entity-definition)
+      - [Connection Entity Discovery](#connection-entity-discovery)
+        - [Reflective Connection Discovery](#reflective-connection-discovery)
+        - [Manual Connection Registration](#manual-connection-registration)
+    - [Data Seeding](#data-seeding)
+    - [Enforcing Policies](#enforcing-policies)
+      - [Naming Policies](#naming-policies)
+      - [Mapping Policies](#mapping-policies)
+      - [Inheritance Policies](#inheritance-policies)
+      - [Custom Policies](#custom-policies)
+        - [Example: Code-First Naming with Snake Case](#example-code-first-naming-with-snake-case)
+        - [Example: Ensure All UUID Properties are Database-Generated](#example-ensure-all-uuid-properties-are-database-generated)
+        - [Example: Automatically Ignoring Navigation Properties during JSON Serialization](#example-automatically-ignoring-navigation-properties-during-json-serialization)
+  - [Stored Procedure Mapping](#stored-procedure-mapping)
+    - [Getting Started with PCO Mapping](#getting-started-with-pco-mapping)
+      - [Mapping a Database Function](#mapping-a-database-function)
+      - [Mapping a Stored Procedure](#mapping-a-stored-procedure)
+    - [PCO Discovery](#pco-discovery)
+  - [Executing PCOs](#executing-pcos)
+
+<!-- /code_chunk_output -->
 
 > :warning: **Warning**
 > This documentation is a work in progress and may not be complete or up-to-date. For the most accurate and up-to-date information, please refer to the source code and the XML documentation comments.
@@ -118,10 +125,10 @@ public partial class Person
 
 Next, create a second file for the partial class that will contain the entity mapping configuration. The name of the file is not important, but it is recommended to use a name that clearly indicates that the file contains entity mapping configuration. In this example, the file is named `Person.mapping.cs`, which clearly states the purpose of the file, and also benefits from Visual Studio's file nesting feature.
 
-In the mapping file, create a partial class for the entity, and inherit from `IReflectiveModelConfiguration<TEntity>` or `IModelConfiguration<TEntity>`, depending on whether or not you want to use the reflective entity discovery feature of RECAP. The following example shows a simple entity mapping configuration for the `Person` entity in the `Person.mapping.cs` file:
+In the mapping file, create a partial class for the entity, and inherit from `IDiscoverableModelConfiguration<TEntity>` or `IModelConfiguration<TEntity>`, depending on whether or not you want to use the reflective entity discovery feature of RECAP. The following example shows a simple entity mapping configuration for the `Person` entity in the `Person.mapping.cs` file:
 
 ```csharp
-public partial class Person : IReflectiveModelConfiguration<Person>
+public partial class Person : IDiscoverableModelConfiguration<Person>
 {
     public static void Configure(EntityTypeBuilder<Person> self)
     {
@@ -159,11 +166,11 @@ public partial class Person : IReflectiveModelConfiguration<Person>
 }
 ```
 
-The static `Configure` method is dictated by the `IReflectiveModelConfiguration<TEntity>` interface, and is invoked by RECAP when the entity is configured. The method takes an EF Core `EntityTypeBuilder<TEntity>` as its only parameter, which is used to configure the entity. The method is static to separate the configuration logic from the entity instance, and to allow for easy navigation between the entity class and its mapping configuration.
+The static `Configure` method is dictated by the `IDiscoverableModelConfiguration<TEntity>` interface, and is invoked by RECAP when the entity is configured. The method takes an EF Core `EntityTypeBuilder<TEntity>` as its only parameter, which is used to configure the entity. The method is static to separate the configuration logic from the entity instance, and to allow for easy navigation between the entity class and its mapping configuration.
 
 #### Entity Discovery
 
-RECAP provides Reflective Entity Discovery, which allows developers to automatically discover and configure entities in a given assembly. This feature only applies to classes implementing `IReflectiveModelConfiguration<TEntity>`. Entities that do not implement this interface must be configured manually.
+RECAP provides Reflective Entity Discovery, which allows developers to automatically discover and configure entities in a given assembly. This feature only applies to classes implementing `IDiscoverableModelConfiguration<TEntity>`. Entities that do not implement this interface must be configured manually.
 
 ##### Reflective Entity Discovery
 
@@ -181,6 +188,60 @@ public class MyDbContext : DbContext
 
 > :bulb: **Tip**
 > If you are targeting multiple databases (i.e., have multiple `DbContext` classes), you can use the `LoadReflectiveModels<TDatabaseEngineModelAttribute>()` extension method to only load entities that are decorated with the specified database engine attribute.
+
+##### Source-Generator Discovery
+
+For build-time discovery without runtime reflection, a Roslyn source generator can generate an `IModelLoader` implementation that loads your entities, base configurations, connections, and data seeds. This improves startup performance and provides compile-time diagnostics.
+
+To use it:
+
+1. Create a partial class and annotate it with `ModelLoaderAttribute`.
+2. Optionally add one or more `ModelDiscoveryFilterAttribute<T>` to include only models decorated with specific attributes.
+3. Use the generated loader in your `DbContext` via `modelBuilder.LoadModels(modelLoader, policies => ...)`.
+
+Example:
+
+```csharp
+using Wkg.EntityFrameworkCore.Discovery.Roslyn;
+
+[ModelLoader(
+    AssemblyDiscoveryFailureBehavior = AssemblyDiscoveryFailureBehavior.Warning,
+    TargetAssemblies = ["MyApp.Core", "MyApp.Models"]
+)]
+// Optional: restrict discovery to models with a marker attribute
+[ModelDiscoveryFilter<MySqlModelAttribute>]
+internal sealed partial class MyModelLoader;
+
+// Usage in DbContext
+public sealed class MyDbContext(DbContextOptions<MyDbContext> options) : DbContext(options)
+{
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        IModelLoader loader = new MyModelLoader();
+        modelBuilder.LoadModels(loader, policies => policies
+            .AddEntityNamingPolicy(EntityNamingPolicy.PreferExplicit)
+            .AddPropertyMappingPolicy(PropertyMappingPolicy.IgnoreImplicit));
+    }
+}
+```
+
+Configuration options:
+
+- `TargetAssemblies`: names of assemblies to scan. If `null`, scans all assemblies in the current compilation.
+- `AssemblyDiscoveryFailureBehavior`: controls diagnostics when a target assembly is missing or contains no valid models.
+  - `Silent`: no message, continue.
+  - `Info`: informational diagnostic, continue.
+  - `Warning`: warning diagnostic, continue.
+  - `Error`: compilation error, abort build.
+- `ModelDiscoveryFilterAttribute<T>`: include only models decorated with attribute `T`. Apply multiple filters to union accepted attributes.
+
+What gets discovered and generated:
+
+- Classes implementing `IDiscoverableModelConfiguration<T>` and `IDiscoverableBaseModelConfiguration<T>`.
+- Connection definitions implementing `IDiscoverableModelConnection<TConnection, TLeft, TRight>`.
+- Data seeders implementing `IDiscoverableModelDataSeed<TModel>`.
+
+The generated loader implements `IModelLoader` and applies configurations, connections, and data seeds when invoked.
 
 ##### Manual Entity Registration
 
@@ -226,7 +287,7 @@ public abstract partial class Person
 `Person.mapping.cs` file:
 
 ```csharp
-public abstract partial class Person : IReflectiveModelConfiguration<Person>
+public abstract partial class Person : IDiscoverableModelConfiguration<Person>
 {
     public static void Configure(EntityTypeBuilder<Person> self)
     {
@@ -277,7 +338,7 @@ public partial class Adult : Person
 `Adult.mapping.cs` file:
 
 ```csharp
-public partial class Adult : Person, IReflectiveModelConfiguration<Adult>
+public partial class Adult : Person, IDiscoverableModelConfiguration<Adult>
 {
     public static void Configure(EntityTypeBuilder<Adult> self)
     {
@@ -339,7 +400,7 @@ public abstract partial class Person
 `Person.mapping.cs` file:
 
 ```csharp
-public abstract partial class Person : IReflectiveModelConfiguration<Person>
+public abstract partial class Person : IDiscoverableModelConfiguration<Person>
 {
     public static void Configure(EntityTypeBuilder<Person> self)
     {
@@ -381,7 +442,7 @@ public partial class Adult : Person
 `Adult.mapping.cs` file:
 
 ```csharp
-public partial class Adult : Person, IReflectiveModelConfiguration<Adult>
+public partial class Adult : Person, IDiscoverableModelConfiguration<Adult>
 {
     public static void Configure(EntityTypeBuilder<Adult> self)
     {
@@ -417,7 +478,7 @@ public partial class Child : Person
 `Child.mapping.cs` file:
 
 ```csharp
-public partial class Child : Person, IReflectiveModelConfiguration<Child>
+public partial class Child : Person, IDiscoverableModelConfiguration<Child>
 {
     public static void Configure(EntityTypeBuilder<Child> self)
     {
@@ -440,7 +501,7 @@ Because all entities are mapped to their own respective tables, EF Core will aut
 
 In Table Per Concrete Type (TPC) inheritance, only **concrete** entities are mapped to tables. Abstract entities are not mapped to tables. This means that properties of abstract entities are duplicated in the tables of the concrete entities that inherit from them.
 
-RECAP allows you to share the mapping configuration of inherited properties between the concrete entities that inherit from the same abstract entity. This is done by implementing `IBaseModelConfiguration<TParentClass>` or `IReflectiveBaseModelConfiguration<TParentClass>` in the abstract entity configuration, and configuring the concrete entities as usual with the `IReflectiveModelConfiguration<TChildClass>` interface.
+RECAP allows you to share the mapping configuration of inherited properties between the concrete entities that inherit from the same abstract entity. This is done by implementing `IBaseModelConfiguration<TParentClass>` or `IDiscoverableBaseModelConfiguration<TParentClass>` in the abstract entity configuration, and configuring the concrete entities as usual with the `IDiscoverableModelConfiguration<TChildClass>` interface.
 
 > :warning: **Warning**
 > If your are not using [Reflective Entity Discovery](#reflective-entity-discovery), you must manually call into the base entity configuration from the concrete entity configuration. See the [Entity Discovery](#entity-discovery) and [Configuring Many-to-Many Relationships](#configuring-many-to-many-relationships) sections for more information.
@@ -464,9 +525,9 @@ public abstract partial class Person
 `Person.mapping.cs` file:
 
 ```csharp
-public abstract partial class Person : IReflectiveBaseModelConfiguration<Person>
+public abstract partial class Person : IDiscoverableBaseModelConfiguration<Person>
 {
-    static void IReflectiveBaseModelConfiguration<Person>.ConfigureBaseModel<TChildClass>(EntityTypeBuilder<TChildClass> self)
+    static void IDiscoverableBaseModelConfiguration<Person>.ConfigureBaseModel<TChildClass>(EntityTypeBuilder<TChildClass> self)
     {
         self.HasKey(my => my.Id)
             .HasName("id");
@@ -485,7 +546,7 @@ public abstract partial class Person : IReflectiveBaseModelConfiguration<Person>
 ```
 
 > :information_source: **Note**
-> Notice that the `Person` entity configuration implements `IReflectiveBaseModelConfiguration<Person>` instead of `IReflectiveModelConfiguration<Person>`, and that no table mapping is done in the `Person` entity configuration.
+> Notice that the `Person` entity configuration implements `IDiscoverableBaseModelConfiguration<Person>` instead of `IDiscoverableModelConfiguration<Person>`, and that no table mapping is done in the `Person` entity configuration.
 
 </details><br>
 <details>
@@ -508,7 +569,7 @@ public partial class Adult : Person
 `Adult.mapping.cs` file:
 
 ```csharp
-public partial class Adult : Person, IReflectiveModelConfiguration<Adult>
+public partial class Adult : Person, IDiscoverableModelConfiguration<Adult>
 {
     public static void Configure(EntityTypeBuilder<Adult> self)
     {
@@ -544,7 +605,7 @@ public partial class Child : Person
 `Child.mapping.cs` file:
 
 ```csharp
-public partial class Child : Person, IReflectiveModelConfiguration<Child>
+public partial class Child : Person, IDiscoverableModelConfiguration<Child>
 {
     public static void Configure(EntityTypeBuilder<Child> self)
     {
@@ -556,7 +617,7 @@ public partial class Child : Person, IReflectiveModelConfiguration<Child>
 </details><br>
 
 > :warning: **Warning**
-> Be sure to not implement the "normal" model configuration interface (`IModelConfiguration<TEntity>` or `IReflectiveModelConfiguration<TEntity>`) in the abstract entity configuration instead of the **base** model configuration interface (`IBaseModelConfiguration<TParentClass>` or `IReflectiveBaseModelConfiguration<TParentClass>`), as the base entity itself must not be configured as a model in TPC inheritance.
+> Be sure to not implement the "normal" model configuration interface (`IModelConfiguration<TEntity>` or `IDiscoverableModelConfiguration<TEntity>`) in the abstract entity configuration instead of the **base** model configuration interface (`IBaseModelConfiguration<TParentClass>` or `IDiscoverableBaseModelConfiguration<TParentClass>`), as the base entity itself must not be configured as a model in TPC inheritance.
 
 #### Configuring Many-to-Many Relationships
 
@@ -584,7 +645,7 @@ public partial class Person
 `Person.mapping.cs` file:
 
 ```csharp
-public partial class Person : IReflectiveModelConfiguration<Person>
+public partial class Person : IDiscoverableModelConfiguration<Person>
 {
     public static void Configure(EntityTypeBuilder<Person> self)
     {
@@ -627,7 +688,7 @@ public partial class Group
 `Group.mapping.cs` file:
 
 ```csharp
-public partial class Group : IReflectiveModelConfiguration<Group>
+public partial class Group : IDiscoverableModelConfiguration<Group>
 {
     public static void Configure(EntityTypeBuilder<Group> self)
     {
@@ -655,7 +716,7 @@ public partial class Group : IReflectiveModelConfiguration<Group>
 
 ##### Connection Entity Definition
 
-Next, create the connection entity by implementing either `IModelConnection<TConnection, TLeft, TRight>` or `IReflectiveModelConnection<TConnection, TLeft, TRight>`. The following example shows how to create a connection entity named `PersonToGroup`:
+Next, create the connection entity by implementing either `IModelConnection<TConnection, TLeft, TRight>` or `IDiscoverableModelConnection<TConnection, TLeft, TRight>`. The following example shows how to create a connection entity named `PersonToGroup`:
 
 <details>
 <summary><i>Show/hide <code>PersonToGroup</code> connection entity configuration</i></summary>
@@ -676,7 +737,7 @@ public partial class PersonToGroup
 `PersonToGroup.mapping.cs` file:
 
 ```csharp
-public partial class PersonToGroup : IReflectiveModelConnection<PersonToGroup, Person, Group>
+public partial class PersonToGroup : IDiscoverableModelConnection<PersonToGroup, Person, Group>
 {
     public static void ConfigureConnection(EntityTypeBuilder<PersonToGroup> self)
     {
@@ -716,7 +777,7 @@ public partial class PersonToGroup : IReflectiveModelConnection<PersonToGroup, P
 }
 ```
 
-As you can see in the example above, the connection entity implements the `IReflectiveModelConnection<TConnection, TLeft, TRight>` interface. This interface requires the implementation of the `ConfigureConnection` method, which configures the connection entity itself. The `Connect` method configures the many-to-many relationship between the `Person` and `Group` entities and passes the `ConfigureConnection` method as the configuration method for the connection entity to EF Core. This way, the connection entity is configured automatically when the `Person` and `Group` entities are configured.
+As you can see in the example above, the connection entity implements the `IDiscoverableModelConnection<TConnection, TLeft, TRight>` interface. This interface requires the implementation of the `ConfigureConnection` method, which configures the connection entity itself. The `Connect` method configures the many-to-many relationship between the `Person` and `Group` entities and passes the `ConfigureConnection` method as the configuration method for the connection entity to EF Core. This way, the connection entity is configured automatically when the `Person` and `Group` entities are configured.
 
 > :information_source: **Note**
 > Notice that the `PersonToGroup` connection entity configures the navigation properties of the `Person` and `Group` entities. This is because the connection entity is the only entity that knows the specifics of the many-to-many relationship between the `Person` and `Group` entities.
@@ -729,7 +790,7 @@ Finally, you need to tell RECAP to discover the connection entity. Similarly to 
 
 ###### Reflective Connection Discovery
 
-If you are using [Reflective Entity Discovery](#reflective-entity-discovery), RECAP will automatically load the connection entities as well, as long as they implement the `IReflectiveModelConnection<TConnection, TLeft, TRight>` interface. This is the recommended way of applying connection entity definitions.
+If you are using [Reflective Entity Discovery](#reflective-entity-discovery), RECAP will automatically load the connection entities as well, as long as they implement the `IDiscoverableModelConnection<TConnection, TLeft, TRight>` interface. This is the recommended way of applying connection entity definitions.
 
 ###### Manual Connection Registration
 
@@ -750,6 +811,48 @@ class MyDbContext : DbContext
 
 > :warning: **Warning**
 > If you are using manual connection registration, be sure to register the connection entities after the entities they connect have been registered.
+
+#### Data Seeding
+
+RECAP supports code-first data seeding that integrates with EF Core model building. Seeders can be discovered at build-time via the source generator, reflectively at runtime, or registered manually.
+
+Implement a seeder by creating a type that implements `IModelDataSeed<T>` or `IDiscoverableModelDataSeed<T>`. The interface exposes a static `IEnumerable<T> GetSeedData()` method used to define initial data for a model. The data is applied during model creation using EF Core's `HasData(...)` method.
+
+EF Core captures `HasData(...)` into migrations. Changing seeded values will produce update/delete/insert operations in subsequent migrations.
+
+<details>
+<summary><i>Show/hide <code>CategoryDataSeed</code> data seed configuration</i></summary>
+
+```csharp
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Wkg.EntityFrameworkCore.Configuration;
+
+public sealed class CategoryDataSeed : IDiscoverableModelDataSeed<Category>
+{
+    public static IEnumerable<Category> GetSeedData() => 
+    [
+        new Category { Id = 1, Name = "Books" },
+        new Category { Id = 2, Name = "Electronics" },
+        new Category { Id = 3, Name = "Clothing" }
+    ];
+}
+```
+
+</details><br>
+
+> :warning: **Warning**
+> For non-static seeding (e.g., environment-dependent values), prefer invoking custom logic during application startup rather than `HasData(...)` to avoid migration churn.  
+> Ensure seeded primary keys are stable and do not conflict with generated keys.
+
+If you are not using the generator, you can invoke seeding when configuring an entity by calling one of the provided extension methods directly after `LoadModel<T>()`. For example:
+
+```csharp
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    modelBuilder.LoadModel<Category>();
+    modelBuilder.LoadDataSeed<Category, CategoryDataSeed>();
+}
+```
 
 #### Enforcing Policies
 
