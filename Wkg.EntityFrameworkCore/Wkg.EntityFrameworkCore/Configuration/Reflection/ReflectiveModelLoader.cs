@@ -14,6 +14,9 @@ namespace Wkg.EntityFrameworkCore.Configuration.Reflection;
 internal sealed class ReflectiveModelLoader : ReflectiveLoaderBase, IReflectiveModelLoader
 {
     public static readonly string s_runtimeMethodName = $"{typeof(IDiscoverableBaseModelConfiguration<>).Namespace}.{nameof(IDiscoverableBaseModelConfiguration<>)}<{{0}}>.{nameof(IDiscoverableBaseModelConfiguration<>.ConfigureBaseModel)}";
+    [Obsolete("This is kept for backward compatibility. will be removed in future major release.")]
+    // TODO: remove in future major release
+    public static readonly string s_legacyRuntimeMethodName = $"{typeof(IReflectiveBaseModelConfiguration<>).Namespace}.{nameof(IReflectiveBaseModelConfiguration<>)}<{{0}}>.{nameof(IReflectiveBaseModelConfiguration<>.ConfigureBaseModel)}";
 
     /// <summary>
     /// Loads and configures all <see cref="IDiscoverableModelConfiguration{T}"/> implementations.
@@ -31,6 +34,8 @@ internal sealed class ReflectiveModelLoader : ReflectiveLoaderBase, IReflectiveM
         Type[] dbEngineModelAttributeTypes = options.TargetDatabaseEngineAttributes;
         Log.WriteInfo($"{nameof(ReflectiveModelLoader)} is initializing.");
 
+#pragma warning disable CS0618 // Type or member is obsolete
+        // TODO: drop support for IReflectiveModelConfiguration in future major release
         ReflectiveEntity[] entities = 
         [
             .. TargetAssembliesOrWithEntryPoint(targetAssemblies)
@@ -39,8 +44,10 @@ internal sealed class ReflectiveModelLoader : ReflectiveLoaderBase, IReflectiveM
                 .Where(type =>
                     // only keep classes
                     type.IsClass
-                    // only keep classes that implement IReflectiveModelConfiguration<T> where T is that exact class
-                    && type.ImplementsDirectGenericInterfaceWithTypeParameter(typeof(IDiscoverableModelConfiguration<>), type)
+                    // only keep classes that implement IDiscoverableModelConfiguration<T> where T is that exact class
+                    && (type.ImplementsDirectGenericInterfaceWithTypeParameter(typeof(IDiscoverableModelConfiguration<>), type)
+                        // TODO: drop support for IReflectiveModelConfiguration<T> in future major release
+                        || type.ImplementsDirectGenericInterfaceWithTypeParameter(typeof(IReflectiveModelConfiguration<>), type))
                     // only keep classes that have the specified database engine attribute if enabled
                     && (dbEngineModelAttributeTypes.Length == 0 || dbEngineModelAttributeTypes.Any(databaseEngineAttributeType => type.GetCustomAttribute(databaseEngineAttributeType) is not null))))
             // just to be sure...
@@ -54,9 +61,17 @@ internal sealed class ReflectiveModelLoader : ReflectiveLoaderBase, IReflectiveM
                     nameof(IDiscoverableModelConfiguration<>.Configure),
                     BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly,
                     [typeof(EntityTypeBuilder<>).MakeGenericType(type)])
-                ))
+                // TODO: drop support for IReflectiveModelConfiguration<T> in future major release
+                ?? type.GetMethod
+                (
+                    nameof(IReflectiveModelConfiguration<>.Configure),
+                    BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly,
+                    [typeof(EntityTypeBuilder<>).MakeGenericType(type)]
+                )
+            ))
             .Where(entity => entity.Configure is not null)
         ];
+#pragma warning restore CS0618 // Type or member is obsolete
 
         Log.WriteInfo($"{nameof(ReflectiveModelLoader)} discovered {entities.Length} models.");
 
@@ -79,14 +94,27 @@ internal sealed class ReflectiveModelLoader : ReflectiveLoaderBase, IReflectiveM
             Type? baseType = entity.Type.BaseType;
             while (baseType is not null)
             {
+                string? methodName = null;
                 // recurse up the inheritance tree and look for any base class that implements IDiscoverableBaseModelConfiguration<T> where T is the base class
                 if (baseType.ImplementsDirectGenericInterfaceWithTypeParameter(typeof(IDiscoverableBaseModelConfiguration<>), baseType))
                 {
-                    Log.WriteDiagnostic($"{nameof(ReflectiveModelLoader)} found base model: {baseType.Name}.");
                     // load the base model using the explicit interface implementation
                     // we have to do some trickery to get the correct method as it's name is compiler generated.
                     // it would be better to do this using the method table / InterfaceMapping but that just dies with some IL format error.
-                    string methodName = string.Format(s_runtimeMethodName, baseType.FullName);
+                    methodName = string.Format(s_runtimeMethodName, baseType.FullName);
+                }
+#pragma warning disable CS0618 // Type or member is obsolete
+                // legacy support for IReflectiveBaseModelConfiguration<T>
+                // TODO: to be removed in future major release
+                else if (baseType.ImplementsDirectGenericInterfaceWithTypeParameter(typeof(IReflectiveBaseModelConfiguration<>), baseType))
+                {
+                    methodName = string.Format(s_legacyRuntimeMethodName, baseType.FullName);
+                }
+#pragma warning restore CS0618 // Type or member is obsolete
+
+                if (methodName is not null)
+                {
+                    Log.WriteDiagnostic($"{nameof(ReflectiveModelLoader)} found base model: {baseType.Name}.");
                     // we can't filter by arguments as the generic type is not known yet
                     MethodInfo? baseConfigure = baseType.GetMethod(methodName, BindingFlags.Static | BindingFlags.NonPublic);
                     if (baseConfigure is not null)

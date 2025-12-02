@@ -3,7 +3,8 @@ using Microsoft.CodeAnalysis.Text;
 using System.Collections.Frozen;
 using System.Collections.Immutable;
 using System.Text;
-using Wkg.EntityFrameworkCore.Discovery.Roslyn;
+using Wkg.EntityFrameworkCore.Discovery.Roslyn.Discovery;
+using Wkg.EntityFrameworkCore.Discovery.Roslyn.Emitters.CodeGenerators;
 using Wkg.EntityFrameworkCore.Discovery.Roslyn.Helpers;
 
 namespace Wkg.EntityFrameworkCore.Discovery.Roslyn.Emitters;
@@ -18,9 +19,11 @@ internal static class ModelDiscoveryEmitter
         { "IEntityDiscoveryContext", "global::Wkg.EntityFrameworkCore.Configuration.Discovery.IEntityDiscoveryContext" },
         { "IModelConfiguration", "global::Wkg.EntityFrameworkCore.Configuration.IModelConfiguration" },
         { "IModelConnection", "global::Wkg.EntityFrameworkCore.Configuration.IModelConnection" },
+        { "IModelDataSeed", "global::Wkg.EntityFrameworkCore.Configuration.IModelDataSeed" },
         { "IBaseModelConfiguration", "global::Wkg.EntityFrameworkCore.Configuration.IBaseModelConfiguration" },
         { "EntityLoader", SymbolNameGenerator.MakeUnique("EntityLoader") },
         { "EntityConnectionLoader", SymbolNameGenerator.MakeUnique("EntityConnectionLoader") },
+        { "EntityDataSeedLoader", SymbolNameGenerator.MakeUnique("EntityDataSeedLoader") },
         { "EntityDiscoveryHelpers", "global::Wkg.EntityFrameworkCore.Configuration.Discovery.EntityDiscoveryHelpers" }
     }.ToFrozenDictionary();
 
@@ -28,16 +31,35 @@ internal static class ModelDiscoveryEmitter
     {
         ModelConfigurationGenerator modelConfigurationGenerator = new(s_types);
         ModelConnectionConfigurationGenerator modelConnectionConfigurationGenerator = new(s_types);
-        IEnumerable<IConfigurationCode> modelConfigurations = model.Models.Select(modelConfigurationGenerator.GenerateCode);
-        IEnumerable<IConfigurationCode> connectionConfigurations = model.ModelConnections.Select(modelConnectionConfigurationGenerator.GenerateCode);
+        ModelDataSeedConfigurationGenerator modelDataSeedConfigurationGenerator = new(s_types);
+        CommentGenerator commentGenerator = new(s_types);
+        EmptyLineGenerator emptyLineGenerator = new();
 
-        IConfigurationCode[] allConfigurations = [..modelConfigurations, ..connectionConfigurations];
-        FrozenDictionary<ITypeSymbol, IConfigurationCode> configurationMap = allConfigurations.ToFrozenDictionary<IConfigurationCode, ITypeSymbol, IConfigurationCode>(static c => c.Symbol, static c => c);
+        CompilationExplorer explorer = model.CompilationExplorer;
+        IEnumerable<INamedConfigurationCode> modelConfigurations = explorer.DiscoverModels(model.Class, context).Select(modelConfigurationGenerator.GenerateCode);
+        IEnumerable<INamedConfigurationCode> connectionConfigurations = explorer.DiscoverModelConnections(model.Class, context).Select(modelConnectionConfigurationGenerator.GenerateCode);
+        IEnumerable<INamedConfigurationCode> dataSeedConfigurations = explorer.DiscoverDataSeeds(model.Class, context).Select(modelDataSeedConfigurationGenerator.GenerateCode);
+        explorer.DiscoveryContext.ReportDiscoveryResults(model.Class, context);
+
+        IConfigurationCode[] allConfigurations = 
+        [
+            commentGenerator.GenerateCode("load models"),
+            ..modelConfigurations,
+            emptyLineGenerator.GenerateCode(),
+            commentGenerator.GenerateCode("load model connections"),
+            ..connectionConfigurations,
+            emptyLineGenerator.GenerateCode(),
+            commentGenerator.GenerateCode("apply data seeds"),
+            ..dataSeedConfigurations
+        ];
+        FrozenDictionary<ITypeSymbol, INamedConfigurationCode> configurationMap = allConfigurations
+            .OfType<INamedConfigurationCode>()
+            .ToFrozenDictionary<INamedConfigurationCode, ITypeSymbol, INamedConfigurationCode>(static c => c.Symbol, static c => c);
         foreach (IConfigurationCode configuration in allConfigurations)
         {
             configuration.ResolveDependencies(configurationMap);
         }
-        IEnumerable<string> sourceLines = allConfigurations.SelectMany(c => c.EmitSourceLines());
+        IEnumerable<string> sourceLines = allConfigurations.SelectMany(c => c.EmitSourceLines(model.Class, context));
 
         StringBuilder sourceBuilder = new(
             $$"""
@@ -53,7 +75,7 @@ internal static class ModelDiscoveryEmitter
                 }
             }
 
-            file readonly ref struct {{s_types["EntityConnectionLoader"]}}<TConnection, TLeft, TRight>
+            file readonly struct {{s_types["EntityConnectionLoader"]}}<TConnection, TLeft, TRight>
                 where TConnection : class, {{s_types["IModelConnection"]}}<TConnection, TLeft, TRight>
                 where TLeft : class, {{s_types["IModelConfiguration"]}}<TLeft>
                 where TRight : class, {{s_types["IModelConfiguration"]}}<TRight>
@@ -75,7 +97,7 @@ internal static class ModelDiscoveryEmitter
                 }
             }
 
-            file readonly ref struct {{s_types["EntityLoader"]}}<T> where T : class, {{s_types["IModelConfiguration"]}}<T>
+            file readonly struct {{s_types["EntityLoader"]}}<T> where T : class, {{s_types["IModelConfiguration"]}}<T>
             {
                 internal readonly {{s_types["EntityTypeBuilder"]}}<T> EntityBuilder { get; }
 
@@ -93,6 +115,22 @@ internal static class ModelDiscoveryEmitter
                 {
                     {{s_types["EntityDiscoveryHelpers"]}}.RegisterInternal(EntityBuilder, context);
                     return EntityBuilder;
+                }
+            }
+
+            file readonly struct {{s_types["EntityDataSeedLoader"]}}<TEntity, TSeed>
+                where TEntity : class, {{s_types["IModelConfiguration"]}}<TEntity>
+                where TSeed : {{s_types["IModelDataSeed"]}}<TEntity>
+            {
+                internal readonly {{s_types["EntityTypeBuilder"]}}<TEntity> EntityBuilder { get; }
+            
+                private {{s_types["EntityDataSeedLoader"]}}({{s_types["EntityTypeBuilder"]}}<TEntity> entityBuilder) =>
+                    EntityBuilder = entityBuilder;
+
+                public static {{s_types["EntityDataSeedLoader"]}}<TEntity, TSeed> Configure({{s_types["EntityTypeBuilder"]}}<TEntity> entityBuilder)
+                {
+                    entityBuilder.HasData(TSeed.GetSeedData());
+                    return new {{s_types["EntityDataSeedLoader"]}}<TEntity, TSeed>(entityBuilder);
                 }
             }
 

@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using System.Collections.Immutable;
 
 namespace Wkg.EntityFrameworkCore.Discovery.Roslyn.Helpers;
 
@@ -20,5 +21,19 @@ internal static class RoslynExtensions
                 remaining.Push(nestedNamespace);
             }
         }
+    }
+
+    public static bool TryGetValue(this ImmutableArray<KeyValuePair<string, TypedConstant>> source, string key, out TypedConstant value)
+    {
+        foreach (KeyValuePair<string, TypedConstant> pair in source)
+        {
+            if (pair.Key == key)
+            {
+                value = pair.Value;
+                return true;
+            }
+        }
+        value = default;
+        return false;
     }
 }

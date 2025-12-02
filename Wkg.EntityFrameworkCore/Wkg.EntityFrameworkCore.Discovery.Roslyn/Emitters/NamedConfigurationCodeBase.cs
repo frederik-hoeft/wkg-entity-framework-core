@@ -1,0 +1,13 @@
+﻿using Microsoft.CodeAnalysis;
+using Wkg.EntityFrameworkCore.Discovery.Roslyn.Helpers;
+
+namespace Wkg.EntityFrameworkCore.Discovery.Roslyn.Emitters;
+
+internal abstract class NamedConfigurationCodeBase : ConfigurationCodeBase, INamedConfigurationCode
+{
+    protected string? InstanceName { get; private set; }
+
+    public abstract INamedTypeSymbol Symbol { get; }
+
+    public virtual string MarkRequired() => InstanceName ??= SymbolNameGenerator.MakeUnique(SymbolNameGenerator.MakeCamelCase(Symbol.Name));
+}

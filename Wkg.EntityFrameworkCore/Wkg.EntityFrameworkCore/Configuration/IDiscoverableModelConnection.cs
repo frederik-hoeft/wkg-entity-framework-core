@@ -4,7 +4,7 @@ using Wkg.EntityFrameworkCore.Extensions;
 namespace Wkg.EntityFrameworkCore.Configuration;
 
 /// <summary>
-/// Represents a many to many connection between two entities that are reflectively configured through <see cref="ModelBuilderExtensions.LoadReflectiveModels(ModelBuilder, Action{IModelOptionsBuilder}?)"/>.
+/// Represents a many to many connection between two entities that are dynamically configured through a corresponding <see cref="IModelLoader"/> or the <see cref="ModelBuilderExtensions.LoadReflectiveModels(ModelBuilder, Action{IModelOptionsBuilder}?)"/> method.
 /// </summary>
 /// <typeparam name="TConnection">The type of the implementing connection entity.</typeparam>
 /// <typeparam name="TLeft">The type of the left entity.</typeparam>

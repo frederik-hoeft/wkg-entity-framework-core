@@ -5,11 +5,7 @@ namespace Wkg.EntityFrameworkCore.Discovery.Roslyn.Emitters;
 
 internal interface IConfigurationCode
 {
-    INamedTypeSymbol Symbol { get; }
+    IEnumerable<string> EmitSourceLines(ISymbol source, SourceProductionContext context);
 
-    string MarkRequired();
-
-    void ResolveDependencies(FrozenDictionary<ITypeSymbol, IConfigurationCode> allConfigurations);
-
-    IEnumerable<string> EmitSourceLines();
+    void ResolveDependencies(FrozenDictionary<ITypeSymbol, INamedConfigurationCode> allConfigurations);
 }

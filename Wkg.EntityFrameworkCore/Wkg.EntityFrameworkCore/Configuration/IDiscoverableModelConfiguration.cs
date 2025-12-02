@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Wkg.EntityFrameworkCore.Configuration;
 
 /// <summary>
-/// Represents a model configuration that will be reflectively configured by the <see cref="ModelBuilderExtensions.LoadReflectiveModels(ModelBuilder, Action{IModelOptionsBuilder}?)"/> method.
+/// Represents a model configuration that will be dynamically configured through a corresponding <see cref="IModelLoader"/> or the <see cref="ModelBuilderExtensions.LoadReflectiveModels(ModelBuilder, Action{IModelOptionsBuilder}?)"/> method.
 /// </summary>
 /// <typeparam name="T">The type of the model.</typeparam>
 /// <remarks>

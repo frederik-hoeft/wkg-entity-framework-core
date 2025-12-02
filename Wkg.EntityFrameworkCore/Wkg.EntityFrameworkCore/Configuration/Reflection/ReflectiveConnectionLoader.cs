@@ -30,6 +30,8 @@ internal sealed class ReflectiveConnectionLoader : ReflectiveLoaderBase, IReflec
 
         Log.WriteInfo($"{nameof(ReflectiveConnectionLoader)} is initializing.");
 
+#pragma warning disable CS0618 // Type or member is obsolete
+        // TODO: drop support for IReflectiveModelConnection in future major release
         ReflectiveConnection[] connections = 
         [
             .. TargetAssembliesOrWithEntryPoint(targetAssemblies)
@@ -38,8 +40,10 @@ internal sealed class ReflectiveConnectionLoader : ReflectiveLoaderBase, IReflec
                 .Where(type =>
                     // only keep classes
                     type.IsClass
-                    // only keep classes that implement IReflectiveModelConnection<TConnection, TFrom, TTo>
-                    && type.ImplementsGenericInterfaceDirectly(typeof(IDiscoverableModelConnection<,,>))
+                    // only keep classes that implement IDiscoverableModelConnection<TConnection, TFrom, TTo>
+                    && (type.ImplementsGenericInterfaceDirectly(typeof(IDiscoverableModelConnection<,,>)) 
+                        // TODO: drop support for IReflectiveModelConnection in future major release
+                        || type.ImplementsGenericInterfaceDirectly(typeof(IReflectiveModelConnection<,,>)))
                     // only keep classes that have the specified database engine attribute if enabled
                     && (dbEngineModelAttributeTypes.Length == 0 || dbEngineModelAttributeTypes.Any(attribute => type.GetCustomAttribute(attribute) is not null))))
             // just to be sure ...
@@ -48,12 +52,17 @@ internal sealed class ReflectiveConnectionLoader : ReflectiveLoaderBase, IReflec
             (
                 Type: type,
                 TypeArgs: type.GetGenericTypeArgumentsOfSingleDirectInterface(typeof(IDiscoverableModelConnection<,,>))
+                    // TODO: drop support for IReflectiveModelConnection in future major release
+                    ?? type.GetGenericTypeArgumentsOfSingleDirectInterface(typeof(IReflectiveModelConnection<,,>))
             ))
             .Where(t => t.TypeArgs is { Length: 3 }
                 // TConnection must match the implementing type
                 && t.TypeArgs[0] == t.Type
                 // TFrom and TTo must implement IReflectiveModelConfiguration<T> (be reflectively loaded)
-                && t.TypeArgs.Skip(1).All(typeParam => typeParam.ImplementsDirectGenericInterfaceWithTypeParameter(typeof(IDiscoverableModelConfiguration<>), typeParam)))
+                && t.TypeArgs.Skip(1).All(typeParam => typeParam
+                    .ImplementsDirectGenericInterfaceWithTypeParameter(typeof(IDiscoverableModelConfiguration<>), typeParam)
+                    // TODO: drop support for IReflectiveModelConfiguration in future major release
+                    || typeParam.ImplementsDirectGenericInterfaceWithTypeParameter(typeof(IReflectiveModelConfiguration<>), typeParam)))
             .Select(type => new ReflectiveConnection
             (
                 Type: type.Type,
@@ -71,6 +80,7 @@ internal sealed class ReflectiveConnectionLoader : ReflectiveLoaderBase, IReflec
                 ))
             .Where(connection => connection.Connect is not null)
         ];
+#pragma warning restore CS0618 // Type or member is obsolete
 
         Log.WriteInfo($"{nameof(ReflectiveConnectionLoader)} discovered {connections.Length} model connections.");
 

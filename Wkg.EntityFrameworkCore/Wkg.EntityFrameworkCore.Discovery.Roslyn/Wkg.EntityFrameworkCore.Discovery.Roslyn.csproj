@@ -18,7 +18,9 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
-	  <EmbeddedResource Include="ModelDiscoveryAttribute.cs" />
+	  <EmbeddedResource Include="ModelLoaderAttribute.cs" />
+	  <EmbeddedResource Include="AssemblyDiscoveryFailureBehavior.cs" />
+	  <EmbeddedResource Include="ModelDiscoveryFilterAttribute.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

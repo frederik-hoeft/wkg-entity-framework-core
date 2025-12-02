@@ -13,8 +13,16 @@ internal static class SourceTextExtensions
             {
                 throw new InvalidOperationException("The type T must be defined in the same assembly as SourceTextExtensions.");
             }
-            using Stream stream = typeof(T).Assembly.GetManifestResourceStream($"{typeof(T).FullName}.cs")
-                ?? throw new InvalidOperationException($"The embedded resource '{typeof(T).FullName}.cs' was not found.");
+            string typeName = typeof(T).FullName ?? throw new InvalidOperationException("The type T must have a full name.");
+            using Stream stream = typeof(SourceTextExtensions).Assembly.GetManifestResourceStream($"{typeName}.cs")
+                ?? throw new InvalidOperationException($"The embedded resource '{typeName}.cs' was not found.");
+            return SourceText.From(stream, Encoding.UTF8, canBeEmbedded: true);
+        }
+
+        public static SourceText FromEmbedded<T>(string typeName)
+        {
+            using Stream stream = typeof(SourceTextExtensions).Assembly.GetManifestResourceStream($"{typeof(T).Namespace}.{typeName}.cs")
+                ?? throw new InvalidOperationException($"The embedded resource '{typeof(T).Namespace}.{typeName}.cs' was not found.");
             return SourceText.From(stream, Encoding.UTF8, canBeEmbedded: true);
         }
     }

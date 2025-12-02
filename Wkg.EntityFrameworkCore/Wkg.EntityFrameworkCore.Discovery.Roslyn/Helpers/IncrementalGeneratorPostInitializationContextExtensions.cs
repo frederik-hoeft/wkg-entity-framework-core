@@ -12,5 +12,11 @@ internal static class IncrementalGeneratorPostInitializationContextExtensions
             SourceText sourceText = SourceTextExtensions.FromEmbedded<T>();
             self.AddSource($"{typeof(T).FullName}.cs", sourceText);
         }
+
+        public void AddEmbeddedSource<T>(string typeName)
+        {
+            SourceText sourceText = SourceTextExtensions.FromEmbedded<T>(typeName);
+            self.AddSource($"{typeof(T).Namespace}.{typeName}.cs", sourceText);
+        }
     }
 }

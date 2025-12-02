@@ -28,7 +28,9 @@ public abstract class ReflectiveProcedureLoader : ReflectiveLoaderBase, IReflect
         Log.WriteInfo($"{nameof(ReflectiveProcedureLoader)} is initializing.");
 
         Log.WriteInfo($"Loading all procedures implementing {options.StoredProcedureInterface.Name}.");
-        ReflectiveProcedure[] entities = TargetAssembliesOrWithEntryPoint(targetAssemblies)
+        ReflectiveProcedure[] entities = 
+        [
+            .. TargetAssembliesOrWithEntryPoint(targetAssemblies)
             // get all types in these assemblies
             .SelectMany(asm => asm.GetTypes()
                 .Where(type =>
@@ -54,7 +56,7 @@ public abstract class ReflectiveProcedureLoader : ReflectiveLoaderBase, IReflect
                 // We need to check this because the type may be derived from StoredProcedure<T> but it might not
                 // implement the reflective interface.
                 && procedure.ProcedureType.ImplementsDirectGenericInterfaceWithTypeParameters(options.ReflectiveInterface, procedure.ProcedureType, procedure.ContextType))
-            .ToArray();
+        ];
 
         Log.WriteInfo($"Discovered {entities.Length} stored procedures.");
 
