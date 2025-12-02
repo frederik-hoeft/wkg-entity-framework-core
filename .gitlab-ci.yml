@@ -7,17 +7,17 @@ stages:
 variables:
   PROJECT_DIRECTORY: "Wkg.EntityFrameworkCore/Wkg.EntityFrameworkCore"
   PROJECT_FILE_PATH: "${PROJECT_DIRECTORY}/Wkg.EntityFrameworkCore.csproj"
-  MAJOR_VERSION: "9"
+  MAJOR_VERSION: "10"
   MINOR_VERSION: "0"
 
 include:
   - project: 'wkg/gitlab-templates'
-    ref: 'v1.2.19'
+    ref: 'v1.2.26'
     file:
-      - '/jobs/build_dotnet_9.yml'
-      - '/jobs/test_dotnet_9.yml'
+      - '/jobs/build_dotnet_10.yml'
+      - '/jobs/test_dotnet_10.yml'
       - '/jobs/increase_version.yml'
-      - '/jobs/deploy_nuget_dotnet_9.yml'
+      - '/jobs/deploy_nuget_dotnet_10.yml'
 
 build:
   extends: .build
