@@ -3,10 +3,14 @@ using System.Collections.Immutable;
 
 namespace Wkg.EntityFrameworkCore.Discovery.Roslyn.Helpers;
 
+/// <summary>
+/// Quality-of-life extension methods for Roslyn symbols.
+/// </summary>
 internal static class RoslynExtensions
 {
     public static IEnumerable<INamedTypeSymbol> GetAllTypes(this INamespaceSymbol namespaceSymbol)
     {
+        // depth-first traversal of the namespace tree to yield all contained type symbols
         Stack<INamespaceSymbol> remaining = [];
         remaining.Push(namespaceSymbol);
         while (remaining.Count > 0)

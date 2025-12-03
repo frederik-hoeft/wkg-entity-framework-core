@@ -10,6 +10,18 @@ namespace Wkg.EntityFrameworkCore.Discovery.Roslyn;
 [Generator(LanguageNames.CSharp)]
 public sealed class ModelDiscoveryGenerator : IIncrementalGenerator
 {
+    public ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
+    [
+        new DiagnosticDescriptor(
+            id: "WKGLIBEFC002",
+            title: "Missing target assembly for model discovery",
+            messageFormat: $"Target assembly '{{0}}' specified in the {nameof(ModelLoaderAttribute)} could not be found in the compilation.",
+            category: "ModelDiscovery",
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true,
+            description: "Ensure that the assembly name is spelled correctly and that the assembly is referenced by the project.")
+    ];
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         context.RegisterPostInitializationOutput(EmitModelDiscoverySource);

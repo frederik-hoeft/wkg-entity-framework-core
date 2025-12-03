@@ -4,6 +4,10 @@ using System.Text;
 
 namespace Wkg.EntityFrameworkCore.Discovery.Roslyn.Emitters.CodeGenerators;
 
+/// <summary>
+/// Generates a model connection registration for a given model connection.
+/// </summary>
+/// <param name="types">The frozen dictionary of type name mappings.</param>
 internal sealed class ModelConnectionConfigurationGenerator(FrozenDictionary<string, string> types)
 {
     private readonly FrozenDictionary<string, string> _types = types;
@@ -31,9 +35,11 @@ internal sealed class ModelConnectionConfigurationGenerator(FrozenDictionary<str
 
         public override IEnumerable<string> EmitSourceLines(ISymbol source, SourceProductionContext context)
         {
-            string modelFullName = Symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            string connectorFullName = Symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            string leftFullName = connection.Left.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            string rightFullName = connection.Right.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
             StringBuilder builder;
-            string concreteConnectionType = $"{generator._types["EntityConnectionLoader"]}<{modelFullName}, {connection.Left.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}, {connection.Right.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>";
+            string concreteConnectionType = $"{generator._types["EntityConnectionLoader"]}<{connectorFullName}, {leftFullName}, {rightFullName}>";
             if (string.IsNullOrEmpty(InstanceName))
             {
                 builder = new StringBuilder();
@@ -43,21 +49,8 @@ internal sealed class ModelConnectionConfigurationGenerator(FrozenDictionary<str
                 builder = new StringBuilder(new string(' ', 4));
                 yield return $"{concreteConnectionType} {InstanceName} =";
             }
-            if (_leftBuilderInstance is null || _rightBuilderInstance is null)
-            {
-                context.ReportDiagnostic(Diagnostic.Create(
-                    new DiagnosticDescriptor(
-                        id: "WKGDF0010",
-                        title: "Missing Model Configuration",
-                        messageFormat: "Cannot emit connection configuration for '{0}' because one or both of the entities it connects are missing: ensure that '{1}' and '{2}' are also configured within the same discovery context.",
-                        category: "Wkg.EntityFrameworkCore.Discovery",
-                        DiagnosticSeverity.Error,
-                        isEnabledByDefault: true),
-                    location: source.Locations.FirstOrDefault(),
-                    Symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
-                    connection.Left.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
-                    connection.Right.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)));
-            }
+            _leftBuilderInstance ??= $"builder.Entity<{leftFullName}>()";
+            _rightBuilderInstance ??= $"builder.Entity<{rightFullName}>()";
             builder.Append(concreteConnectionType).Append(".Configure(builder, ").Append(_leftBuilderInstance).Append(", ").Append(_rightBuilderInstance).Append(").Register(context);");
             yield return builder.ToString();
         }

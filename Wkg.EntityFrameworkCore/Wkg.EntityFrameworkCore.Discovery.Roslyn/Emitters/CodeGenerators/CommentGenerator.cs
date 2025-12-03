@@ -3,6 +3,10 @@ using System.Collections.Frozen;
 
 namespace Wkg.EntityFrameworkCore.Discovery.Roslyn.Emitters.CodeGenerators;
 
+/// <summary>
+/// Generates a single-line comment.
+/// </summary>
+/// <param name="types">The frozen dictionary of type name mappings.</param>
 internal sealed class CommentGenerator(FrozenDictionary<string, string> types)
 {
     private readonly FrozenDictionary<string, string> _types = types;

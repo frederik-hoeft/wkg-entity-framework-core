@@ -280,7 +280,7 @@ public class ModelDiscoveryIntegrationTests
     }
 
     // Test DbContext class
-    private class TestDbContext(DbContextOptions<TestDbContext> options, IModelLoader modelLoader) : DbContext(options)
+    private sealed class TestDbContext(DbContextOptions<TestDbContext> options, IModelLoader modelLoader) : DbContext(options)
     {
         public DbSet<Book> Books => Set<Book>();
         public DbSet<Category> Categories => Set<Category>();

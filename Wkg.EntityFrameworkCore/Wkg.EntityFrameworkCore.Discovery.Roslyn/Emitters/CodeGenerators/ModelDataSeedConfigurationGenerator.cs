@@ -3,6 +3,10 @@ using System.Collections.Frozen;
 
 namespace Wkg.EntityFrameworkCore.Discovery.Roslyn.Emitters.CodeGenerators;
 
+/// <summary>
+/// Generates a model data seed registration for a given model data seed.
+/// </summary>
+/// <param name="types">The frozen dictionary of type name mappings.</param>
 internal sealed class ModelDataSeedConfigurationGenerator(FrozenDictionary<string, string> types)
 {
     private readonly FrozenDictionary<string, string> _types = types;
@@ -27,20 +31,7 @@ internal sealed class ModelDataSeedConfigurationGenerator(FrozenDictionary<strin
         {
             string seederFullName = Symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
             string modelFullName = dataSeed.Model.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-            if (_modelBuilderInstance is null)
-            {
-                context.ReportDiagnostic(Diagnostic.Create(
-                    new DiagnosticDescriptor(
-                        id: "WKGDF001",
-                        title: "Missing Model Configuration",
-                        messageFormat: "Cannot emit data seed configuration for '{0}' because the entity it seeds was never configured. Ensure that entity '{1}' is loaded within the same discovery context.",
-                        category: "ModelDiscovery",
-                        DiagnosticSeverity.Error,
-                        isEnabledByDefault: true),
-                    location: source.Locations.FirstOrDefault(),
-                    Symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat),
-                    dataSeed.Model.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)));
-            }
+            _modelBuilderInstance ??= $"builder.Entity<{modelFullName}>()";
             yield return $"{generator._types["EntityDataSeedLoader"]}<{modelFullName}, {seederFullName}>.Configure({_modelBuilderInstance});";
         }
     }

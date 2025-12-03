@@ -3,6 +3,9 @@ using System.Collections.Frozen;
 
 namespace Wkg.EntityFrameworkCore.Discovery.Roslyn.Emitters;
 
+/// <summary>
+/// The base interface for all configuration code generators.
+/// </summary>
 internal interface IConfigurationCode
 {
     IEnumerable<string> EmitSourceLines(ISymbol source, SourceProductionContext context);

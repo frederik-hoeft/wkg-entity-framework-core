@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using System.Collections.Immutable;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Wkg.EntityFrameworkCore.ProcedureMapping.Compiler.Output;
 using Wkg.EntityFrameworkCore.ProcedureMapping.ResultCollections;
@@ -99,6 +100,7 @@ internal sealed class ProcedureExecutionContext<TCompiledParameter> : IProcedure
     /// </summary>
     /// <param name="databaseFacade">The <see cref="DatabaseFacade"/> to be used for the ADO.NET call.</param>
     /// <returns>The single value returned by this procedure or function.</returns>
+    [SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "Stored procedure name is runtime-immutable and not influenced by user input.")]
     private object? ExecuteProcedureScalar(DatabaseFacade databaseFacade)
     {
         DbConnection connection = databaseFacade.GetDbConnection();
@@ -126,6 +128,7 @@ internal sealed class ProcedureExecutionContext<TCompiledParameter> : IProcedure
     /// <param name="databaseFacade">The <see cref="DatabaseFacade"/> to be used for the ADO.NET call.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the single value returned by this procedure or function.</returns>
+    [SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "Stored procedure name is runtime-immutable and not influenced by user input.")]
     private async Task<object?> ExecuteProcedureScalarAsync(DatabaseFacade databaseFacade, CancellationToken cancellationToken = default)
     {
         DbConnection connection = databaseFacade.GetDbConnection();
@@ -153,6 +156,7 @@ internal sealed class ProcedureExecutionContext<TCompiledParameter> : IProcedure
     /// <typeparam name="TResult">The type of the entity to be returned.</typeparam>
     /// <param name="databaseFacade">The <see cref="DatabaseFacade"/> to be used for the ADO.NET call.</param>
     /// <returns>The first row returned by this procedure, stored in a <typeparamref name="TResult"/> entity.</returns>
+    [SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "Stored procedure name is runtime-immutable and not influenced by user input.")]
     private ResultElement<TResult> ExecuteProcedureReaderSingle<TResult>(DatabaseFacade databaseFacade)
         where TResult : class
     {
@@ -186,6 +190,7 @@ internal sealed class ProcedureExecutionContext<TCompiledParameter> : IProcedure
     /// <param name="databaseFacade">The <see cref="DatabaseFacade"/> to be used for the ADO.NET call.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the first row returned by this procedure, stored in a <typeparamref name="TResult"/> entity.</returns>
+    [SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "Stored procedure name is runtime-immutable and not influenced by user input.")]
     private async Task<ResultElement<TResult>> ExecuteProcedureReaderSingleAsync<TResult>(DatabaseFacade databaseFacade, CancellationToken cancellationToken = default)
         where TResult : class
     {
@@ -218,6 +223,7 @@ internal sealed class ProcedureExecutionContext<TCompiledParameter> : IProcedure
     /// <typeparam name="TResult">The type of the result returned by the stored procedure.</typeparam>
     /// <param name="databaseFacade">The <see cref="DatabaseFacade"/> to be used for the ADO.NET call.</param>
     /// <returns>A collection of <typeparamref name="TResult"/> entities representing all rows returned by this procedure.</returns>
+    [SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "Stored procedure name is runtime-immutable and not influenced by user input.")]
     private ResultCollection<TResult> ExecuteProcedureReader<TResult>(DatabaseFacade databaseFacade)
         where TResult : class
     {
@@ -252,6 +258,7 @@ internal sealed class ProcedureExecutionContext<TCompiledParameter> : IProcedure
     /// <param name="databaseFacade">The <see cref="DatabaseFacade"/> to be used for the ADO.NET call.</param>
     /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains a collection of <typeparamref name="TResult"/> entities representing all rows returned by this procedure.</returns>
+    [SuppressMessage("Security", "CA2100:Review SQL queries for security vulnerabilities", Justification = "Stored procedure name is runtime-immutable and not influenced by user input.")]
     private async Task<ResultCollection<TResult>> ExecuteProcedureReaderAsync<TResult>(DatabaseFacade databaseFacade, CancellationToken cancellationToken = default)
         where TResult : class
     {

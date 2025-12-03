@@ -2,6 +2,7 @@
 
 namespace Wkg.EntityFrameworkCore.Discovery.Roslyn;
 
+// internal part of the ModelLoaderAttribute class, this file is not included in the embedded source added to the compilation
 public partial class ModelLoaderAttribute
 {
     internal static ModelLoaderAttribute FromAttributeData(AttributeData attributeData)

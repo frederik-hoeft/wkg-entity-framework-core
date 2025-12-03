@@ -3,6 +3,9 @@ using System.Text;
 
 namespace Wkg.EntityFrameworkCore.Discovery.Roslyn.Helpers;
 
+/// <summary>
+/// Helper to load embedded source text from this assembly.
+/// </summary>
 internal static class SourceTextExtensions
 {
     extension(SourceText)

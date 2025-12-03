@@ -1,7 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System.Collections.Frozen;
-using System.Collections.Immutable;
 using System.Text;
 using Wkg.EntityFrameworkCore.Discovery.Roslyn.Discovery;
 using Wkg.EntityFrameworkCore.Discovery.Roslyn.Emitters.CodeGenerators;
@@ -9,8 +8,12 @@ using Wkg.EntityFrameworkCore.Discovery.Roslyn.Helpers;
 
 namespace Wkg.EntityFrameworkCore.Discovery.Roslyn.Emitters;
 
+/// <summary>
+/// Emits the generated IModelLoader implementation for a decorated model loader class.
+/// </summary>
 internal static class ModelDiscoveryEmitter
 {
+    // Type mappings used in generated code, since the source generator doesn't hold strong references to EF Core or Wkg.EntityFrameworkCore assemblies
     private static readonly FrozenDictionary<string, string> s_types = new Dictionary<string, string>()
     {
         { "EntityTypeBuilder", "global::Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder" },
@@ -27,31 +30,38 @@ internal static class ModelDiscoveryEmitter
         { "EntityDiscoveryHelpers", "global::Wkg.EntityFrameworkCore.Configuration.Discovery.EntityDiscoveryHelpers" }
     }.ToFrozenDictionary();
 
+    /// <summary>
+    /// Emits the generated source code for the model loader.
+    /// </summary>
+    /// <param name="context">The source production context.</param>
+    /// <param name="model">The data model for generation.</param>
     public static void EmitSource(SourceProductionContext context, ModelDiscoveryGeneratorModel model)
     {
+        // set up code generators
         ModelConfigurationGenerator modelConfigurationGenerator = new(s_types);
         ModelConnectionConfigurationGenerator modelConnectionConfigurationGenerator = new(s_types);
         ModelDataSeedConfigurationGenerator modelDataSeedConfigurationGenerator = new(s_types);
         CommentGenerator commentGenerator = new(s_types);
         EmptyLineGenerator emptyLineGenerator = new();
 
+        // discover model configurations, connections, and data seeds
         CompilationExplorer explorer = model.CompilationExplorer;
         IEnumerable<INamedConfigurationCode> modelConfigurations = explorer.DiscoverModels(model.Class, context).Select(modelConfigurationGenerator.GenerateCode);
         IEnumerable<INamedConfigurationCode> connectionConfigurations = explorer.DiscoverModelConnections(model.Class, context).Select(modelConnectionConfigurationGenerator.GenerateCode);
         IEnumerable<INamedConfigurationCode> dataSeedConfigurations = explorer.DiscoverDataSeeds(model.Class, context).Select(modelDataSeedConfigurationGenerator.GenerateCode);
+        // validate and report discovery results
         explorer.DiscoveryContext.ReportDiscoveryResults(model.Class, context);
-
+        // aggregate all configurations into their desired order
         IConfigurationCode[] allConfigurations = 
         [
             commentGenerator.GenerateCode("load models"),
             ..modelConfigurations,
-            emptyLineGenerator.GenerateCode(),
             commentGenerator.GenerateCode("load model connections"),
             ..connectionConfigurations,
-            emptyLineGenerator.GenerateCode(),
             commentGenerator.GenerateCode("apply data seeds"),
             ..dataSeedConfigurations
         ];
+        // resolve interdependencies between configurations (e.g., connections consuming entity builders from the models they connect)
         FrozenDictionary<ITypeSymbol, INamedConfigurationCode> configurationMap = allConfigurations
             .OfType<INamedConfigurationCode>()
             .ToFrozenDictionary<INamedConfigurationCode, ITypeSymbol, INamedConfigurationCode>(static c => c.Symbol, static c => c);
@@ -59,8 +69,10 @@ internal static class ModelDiscoveryEmitter
         {
             configuration.ResolveDependencies(configurationMap);
         }
+        // emit source lines for all configurations
         IEnumerable<string> sourceLines = allConfigurations.SelectMany(c => c.EmitSourceLines(model.Class, context));
 
+        // build final source
         StringBuilder sourceBuilder = new(
             $$"""
             #nullable enable
@@ -145,9 +157,8 @@ internal static class ModelDiscoveryEmitter
                 }
             }
             """);
-
+        // add source to context
         SourceText sourceText = SourceText.From(sourceBuilder.ToString(), Encoding.UTF8);
-
         context.AddSource($"{model.Class.Name}.ModelRegistration.g.cs", sourceText);
     }
 }

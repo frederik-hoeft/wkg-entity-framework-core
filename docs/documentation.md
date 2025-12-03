@@ -17,6 +17,7 @@
     - [Entity Discovery](#entity-discovery)
       - [Reflective Entity Discovery](#reflective-entity-discovery)
       - [Source-Generator Discovery](#source-generator-discovery)
+        - [Diagnostics](#diagnostics)
       - [Manual Entity Registration](#manual-entity-registration)
     - [Configuring Inheritance Hierarchies](#configuring-inheritance-hierarchies)
       - [Table Per Hierarchy (TPH)](#table-per-hierarchy-tph)
@@ -242,6 +243,18 @@ What gets discovered and generated:
 - Data seeders implementing `IDiscoverableModelDataSeed<TModel>`.
 
 The generated loader implements `IModelLoader` and applies configurations, connections, and data seeds when invoked.
+
+###### Diagnostics
+
+The source generator provides compile-time diagnostics for common issues. All diagnostics have IDs prefixed with `WKGLIBEFC` (WKG Library Entity Framework Core).
+
+| Diagnostic ID | Category | Title | Description |
+|---------------|----------|-------|-------------|
+| `WKGLIBEFC001` | Compatibility | Incompatible assembly version. | Source generator 'Wkg.EntityFrameworkCore.Discovery.Roslyn' must have the same version as 'Wkg.EntityFrameworkCore' to ensure compatibility. 'Wkg.EntityFrameworkCore.Discovery.Roslyn' has version '{0}', but expected version was '{1}' from 'Wkg.EntityFrameworkCore'.<br>Ensures that the source generator 'Wkg.EntityFrameworkCore.Discovery.Roslyn' and the dependent assembly 'Wkg.EntityFrameworkCore' have matching versions to prevent code generation issues due to API mismatches. |
+| `WKGLIBEFC002` | Compatibility | Missing target assembly for model discovery. | Target assembly '{0}' specified in the ModelLoaderAttribute could not be found in the compilation. Ensure that the assembly name is correct and that the assembly is referenced by the project. |
+| `WKGLIBEFC003` | Usage | Invalid model discovery filter attribute. | The model discovery filter attribute provided as type argument `T` to `ModelDiscoveryFilterAttribute<T>` does not derive from `DatabaseEngineModelAttribute`. |
+| `WKGLIBEFC004` | Design | No discoverable models found. | None of the target assemblies contain any classes implementing `IDiscoverableModelConfiguration<T>`, `IDiscoverableModelConnection<TConnection, TLeft, TRight>`, or `IDiscoverableModelDataSeed<TModel>`. This may indicate a misconfiguration of the source generator. |
+| `WKGLIBEFC005` | Design | No discoverable models found in assembly. | The explicitly specified target assembly '{0}' does not contain any classes implementing `IDiscoverableModelConfiguration<T>`, `IDiscoverableModelConnection<TConnection, TLeft, TRight>`, or `IDiscoverableModelDataSeed<TModel>`. This may indicate a misconfiguration of the source generator. |
 
 ##### Manual Entity Registration
 

@@ -3,6 +3,9 @@ using System.Collections.Frozen;
 
 namespace Wkg.EntityFrameworkCore.Discovery.Roslyn.Emitters.CodeGenerators;
 
+/// <summary>
+/// Generates an empty line.
+/// </summary>
 internal sealed class EmptyLineGenerator
 {
     private readonly EmptyLineCode _emptyLineCode = new();

@@ -3,6 +3,9 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Wkg.EntityFrameworkCore.Discovery.Roslyn.Helpers;
 
+/// <summary>
+/// Helper to emit embedded source files from this generator assembly into the compilation.
+/// </summary>
 internal static class IncrementalGeneratorPostInitializationContextExtensions
 {
     extension(IncrementalGeneratorPostInitializationContext self)

@@ -3,6 +3,9 @@ using Wkg.EntityFrameworkCore.Discovery.Roslyn.Helpers;
 
 namespace Wkg.EntityFrameworkCore.Discovery.Roslyn.Emitters;
 
+/// <summary>
+/// Base class for named configuration code emitters.
+/// </summary>
 internal abstract class NamedConfigurationCodeBase : ConfigurationCodeBase, INamedConfigurationCode
 {
     protected string? InstanceName { get; private set; }
