@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.CodeAnalysis;
 using Wkg.EntityFrameworkCore.Configuration.Discovery;
 
 namespace Wkg.EntityFrameworkCore.Configuration;

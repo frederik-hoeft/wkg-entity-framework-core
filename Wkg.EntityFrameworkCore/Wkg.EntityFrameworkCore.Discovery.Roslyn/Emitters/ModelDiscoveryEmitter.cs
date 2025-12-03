@@ -83,6 +83,9 @@ internal static class ModelDiscoveryEmitter
             {
                 void {{s_types["IModelLoader"]}}.LoadModels({{s_types["ModelBuilder"]}} builder, {{s_types["IEntityDiscoveryContext"]}} context)
                 {
+                    global::System.ArgumentNullException.ThrowIfNull(builder);
+                    global::System.ArgumentNullException.ThrowIfNull(context);
+
                     {{string.Join($"\r\n{new string(' ', 2 * 4)}", sourceLines)}}
                 }
             }

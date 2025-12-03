@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Diagnostics.CodeAnalysis;
 using Wkg.EntityFrameworkCore.Configuration;
 
 namespace Wkg.EntityFrameworkCore.Tests.Discovery.Roslyn.TestData;
@@ -11,7 +12,7 @@ internal sealed class Book : BaseProduct, IDiscoverableModelConfiguration<Book>
     public required string ISBN { get; set; }
     public int PageCount { get; set; }
 
-    public static void Configure(EntityTypeBuilder<Book> self)
+    public static void Configure([NotNull] EntityTypeBuilder<Book> self)
     {
         self.ToTable("books")
             .HasKey(b => b.Id).HasName("pk_books");

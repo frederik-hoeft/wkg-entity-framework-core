@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Wkg.EntityFrameworkCore.Configuration;
 
@@ -18,7 +19,7 @@ public interface IModelConnection<TConnection, TLeft, TRight>
     /// </summary>
     /// <param name="left">The left entity.</param>
     /// <param name="right">The right entity.</param>
-    static abstract void Connect(EntityTypeBuilder<TLeft> left, EntityTypeBuilder<TRight> right);
+    static abstract void Connect([NotNull] EntityTypeBuilder<TLeft> left, [NotNull] EntityTypeBuilder<TRight> right);
 
     /// <summary>
     /// Configures the connection entity.
@@ -27,5 +28,5 @@ public interface IModelConnection<TConnection, TLeft, TRight>
     /// This method should be passed to <see cref="CollectionCollectionBuilder{TLeftEntity, TRightEntity}.UsingEntity{TJoinEntity}(Func{EntityTypeBuilder{TJoinEntity}, ReferenceCollectionBuilder{TLeftEntity, TJoinEntity}}, Func{EntityTypeBuilder{TJoinEntity}, ReferenceCollectionBuilder{TRightEntity, TJoinEntity}}, Action{EntityTypeBuilder{TJoinEntity}})"/> to configure the connection entity in the <see cref="Connect(EntityTypeBuilder{TLeft}, EntityTypeBuilder{TRight})"/> method.
     /// </remarks>
     /// <param name="self">The connection entity.</param>
-    static abstract void ConfigureConnection(EntityTypeBuilder<TConnection> self);
+    static abstract void ConfigureConnection([NotNull] EntityTypeBuilder<TConnection> self);
 }

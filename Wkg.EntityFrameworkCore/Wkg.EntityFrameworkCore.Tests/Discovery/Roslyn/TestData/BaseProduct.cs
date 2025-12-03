@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Diagnostics.CodeAnalysis;
 using Wkg.EntityFrameworkCore.Configuration;
 
 namespace Wkg.EntityFrameworkCore.Tests.Discovery.Roslyn.TestData;
@@ -12,7 +13,7 @@ internal abstract class BaseProduct : IDiscoverableBaseModelConfiguration<BasePr
     public decimal Price { get; set; }
     public DateTime CreatedAt { get; set; }
 
-    static void IBaseModelConfiguration<BaseProduct>.ConfigureBaseModel<TChildClass>(EntityTypeBuilder<TChildClass> self)
+    static void IBaseModelConfiguration<BaseProduct>.ConfigureBaseModel<TChildClass>([NotNull] EntityTypeBuilder<TChildClass> self)
     {
         self.Property(p => p.Id)
             .HasColumnType("INTEGER")
