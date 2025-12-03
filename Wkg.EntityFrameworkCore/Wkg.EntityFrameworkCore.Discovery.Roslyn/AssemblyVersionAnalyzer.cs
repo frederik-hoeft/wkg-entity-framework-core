@@ -55,7 +55,7 @@ public sealed class AssemblyVersionAnalyzer : DiagnosticAnalyzer
                 compilationContext.ReportDiagnostic(diagnostic);
                 return;
             }
-            Version analyzerVersion = WkgEntityFrameworkCoreAnalyzer.VersionInfo.Version;
+            Version analyzerVersion = WkgEntityFrameworkCoreDiscoveryRoslyn.VersionInfo.Version;
             if (wkgEfCoreVersion.Major != analyzerVersion.Major
                 || wkgEfCoreVersion.Minor != analyzerVersion.Minor
                 || wkgEfCoreVersion.Build != analyzerVersion.Build)
@@ -63,7 +63,7 @@ public sealed class AssemblyVersionAnalyzer : DiagnosticAnalyzer
                 Diagnostic diagnostic = Diagnostic.Create(
                     s_incompatibleVersion,
                     Location.None,
-                    WkgEntityFrameworkCoreAnalyzer.VersionInfo.Version.ToString(),
+                    WkgEntityFrameworkCoreDiscoveryRoslyn.VersionInfo.Version.ToString(),
                     wkgEfCoreVersion.ToString());
                 compilationContext.ReportDiagnostic(diagnostic);
             }
