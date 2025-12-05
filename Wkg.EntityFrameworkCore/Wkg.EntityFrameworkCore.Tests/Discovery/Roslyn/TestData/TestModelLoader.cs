@@ -1,4 +1,4 @@
-using Wkg.EntityFrameworkCore.Discovery.Roslyn;
+using Wkg.EntityFrameworkCore.SourceGeneration;
 
 namespace Wkg.EntityFrameworkCore.Tests.Discovery.Roslyn.TestData;
 
