@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System.Diagnostics.CodeAnalysis;
 using Wkg.EntityFrameworkCore.Configuration;
 
 namespace Wkg.EntityFrameworkCore.Tests.Discovery.Roslyn.TestData;
@@ -15,8 +14,10 @@ internal sealed class BookAuthor : IDiscoverableModelConnection<BookAuthor, Book
     public required Author Author { get; set; }
     public bool IsPrimary { get; set; }
 
-    public static void ConfigureConnection([NotNull] EntityTypeBuilder<BookAuthor> self)
+    public static void ConfigureConnection(EntityTypeBuilder<BookAuthor> self)
     {
+        ArgumentNullException.ThrowIfNull(self);
+
         self.ToTable("book_authors")
             .HasKey(ba => ba.Id).HasName("pk_book_authors");
 
@@ -47,8 +48,11 @@ internal sealed class BookAuthor : IDiscoverableModelConnection<BookAuthor, Book
             .HasDatabaseName("ix_book_authors_book_author");
     }
 
-    public static void Connect([NotNull] EntityTypeBuilder<Book> left, [NotNull] EntityTypeBuilder<Author> right)
+    public static void Connect(EntityTypeBuilder<Book> left, EntityTypeBuilder<Author> right)
     {
+        ArgumentNullException.ThrowIfNull(left);
+        ArgumentNullException.ThrowIfNull(right);
+
         // Configure the many-to-many relationship through the junction table
         left.HasMany<BookAuthor>()
             .WithOne(ba => ba.Book)

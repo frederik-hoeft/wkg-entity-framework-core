@@ -21,21 +21,24 @@ public abstract class ProcedureBuildPipeline
         where TCompiledParameter : struct, ICompiledParameter
         where TDataReader : DbDataReader
     {
+        ArgumentNullException.ThrowIfNull(procedureBuilder);
         ICompiledProcedure compiledProcedure = procedureBuilder
             .Build()
             .Compile(
-                procedureBuilder.ParameterBuilders
-                    .Select(p => p
+            [
+                .. procedureBuilder.ParameterBuilders
+                .Select(p => p
+                    .Build()
+                    .Compile())
+            ], procedureBuilder.ResultBuilder?
+                .Build()
+                .Compile(
+                [
+                    .. procedureBuilder.ResultBuilder.ColumnBuilders
+                    .Select(c => c
                         .Build()
                         .Compile())
-                    .ToArray(),
-                procedureBuilder.ResultBuilder?
-                    .Build()
-                    .Compile(procedureBuilder.ResultBuilder.ColumnBuilders
-                        .Select(c => c
-                            .Build()
-                            .Compile())
-                        .ToArray()));
+                ]));
 
         if (!ProcedureRegistry.TryAddProcedure(compiledProcedure))
         {

@@ -15,7 +15,7 @@ namespace Wkg.EntityFrameworkCore.Configuration.Discovery;
 /// Initializes a new instance of the <see cref="EntityDiscoveryContext"/> class using the specified <paramref name="policies"/>.
 /// </summary>
 /// <param name="policies">The policies to apply to enforce on discovered entities.</param>
-public class EntityDiscoveryContext(IEntityPolicy[] policies) : IReflectiveEntityDiscoveryContext
+public sealed class EntityDiscoveryContext(IEntityPolicy[] policies) : IReflectiveEntityDiscoveryContext
 {
     private static readonly ConditionalWeakTable<ModelBuilder, HashSet<Type>?> s_loadedDatabaseEngines = [];
     private readonly Dictionary<Type, IReflectiveModelLoader> _loaders = [];
@@ -73,10 +73,7 @@ public class EntityDiscoveryContext(IEntityPolicy[] policies) : IReflectiveEntit
         {
             // this ORM model builder has already been configured previously
             // null means that all database engines have been loaded
-            if (loadedDatabaseEngines is null)
-            {
-                throw new InvalidOperationException("ORM model builder has already been configured for all reflectively loaded entities.");
-            }
+            _ = loadedDatabaseEngines ?? throw new InvalidOperationException("ORM model builder has already been configured for all reflectively loaded entities.");
             Type[] dbEngineModelAttributeTypes = options.TargetDatabaseEngineAttributes;
             if (options.TargetDatabaseEngineAttributes.Length == 0)
             {

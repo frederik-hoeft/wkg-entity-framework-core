@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System.Diagnostics.CodeAnalysis;
 using Wkg.EntityFrameworkCore.Configuration;
 
 namespace Wkg.EntityFrameworkCore.Tests.Discovery.Roslyn.TestData;
@@ -13,8 +12,10 @@ internal sealed class Category : IDiscoverableModelConfiguration<Category>
     public string? Description { get; set; }
     public ICollection<Magazine> Magazines { get; set; } = null!;
 
-    public static void Configure([NotNull] EntityTypeBuilder<Category> self)
+    public static void Configure(EntityTypeBuilder<Category> self)
     {
+        ArgumentNullException.ThrowIfNull(self);
+
         self.ToTable("categories")
             .HasKey(c => c.Id).HasName("pk_categories");
 

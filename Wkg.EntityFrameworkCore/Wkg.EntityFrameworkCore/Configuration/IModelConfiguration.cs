@@ -18,5 +18,5 @@ public interface IModelConfiguration<T> where T : class, IModelConfiguration<T>
     /// Configures the model.
     /// </summary>
     /// <param name="self">The model builder.</param>
-    static abstract void Configure([NotNull] EntityTypeBuilder<T> self);
+    static abstract void Configure(EntityTypeBuilder<T> self);
 }

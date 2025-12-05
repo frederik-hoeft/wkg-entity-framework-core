@@ -8,10 +8,12 @@ internal readonly struct PreferExplicitMappingPolicy : IMappingPolicy
 {
     public void Audit(IMutableEntityType entityType)
     {
-        IMutableProperty[] unmappedProperties = entityType
+        IMutableProperty[] unmappedProperties = 
+        [
+            .. entityType
             .GetDeclaredProperties()
             .Where(p => !p.GetAnnotations().Any())
-            .ToArray();
+        ];
         if (unmappedProperties.Length > 0)
         {
             Log.WriteWarning($"{nameof(PreferExplicitMappingPolicy)}: entity {entityType.ClrType.Name} contains implicitly mapped properties.");

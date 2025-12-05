@@ -7,7 +7,7 @@ namespace Wkg.EntityFrameworkCore.Configuration.Policies.Defaults.InheritanceVal
 /// <summary>
 /// Configures the inheritance validation policy for entities, allowing for the enforcement of strict inheritance rules.
 /// </summary>
-public class EntityInheritanceValidation : IEntityPolicyBuilder<EntityInheritanceValidation>
+public sealed class EntityInheritanceValidation : IEntityPolicyBuilder<EntityInheritanceValidation>
 {
     private IInheritanceValidationBuilder? _inner;
 

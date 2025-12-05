@@ -5,7 +5,7 @@ namespace Wkg.EntityFrameworkCore.Configuration.Policies.Defaults.EntityNamingPo
 /// <summary>
 /// Configures the naming policy for database components.
 /// </summary>
-public class EntityNaming : IEntityPolicyBuilder<EntityNaming>
+public sealed class EntityNaming : IEntityPolicyBuilder<EntityNaming>
 {
     private IEntityNamingPolicy _policy;
     private bool _policySet;

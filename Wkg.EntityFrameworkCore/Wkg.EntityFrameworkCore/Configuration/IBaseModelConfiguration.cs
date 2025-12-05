@@ -14,6 +14,6 @@ public interface IBaseModelConfiguration<TParentClass> where TParentClass : clas
     /// </summary>
     /// <typeparam name="TChildClass">The type of the child class.</typeparam>
     /// <param name="self">The entity type builder of the child class.</param>
-    static abstract void ConfigureBaseModel<TChildClass>([NotNull] EntityTypeBuilder<TChildClass> self)
+    static abstract void ConfigureBaseModel<TChildClass>(EntityTypeBuilder<TChildClass> self)
         where TChildClass : class, TParentClass, IModelConfiguration<TChildClass>;
 }

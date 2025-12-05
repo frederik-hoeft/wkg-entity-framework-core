@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System.Diagnostics.CodeAnalysis;
 using Wkg.EntityFrameworkCore.Configuration;
 
 namespace Wkg.EntityFrameworkCore.Tests.Discovery.Roslyn.TestData;
@@ -14,8 +13,10 @@ internal sealed class Author : IDiscoverableModelConfiguration<Author>
     public string? Biography { get; set; }
     public required ICollection<BookAuthor> BookAuthors { get; set; }
 
-    public static void Configure([NotNull] EntityTypeBuilder<Author> self)
+    public static void Configure(EntityTypeBuilder<Author> self)
     {
+        ArgumentNullException.ThrowIfNull(self);
+
         self.ToTable("authors")
             .HasKey(a => a.Id).HasName("pk_authors");
 
