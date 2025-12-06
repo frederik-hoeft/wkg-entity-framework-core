@@ -50,9 +50,7 @@ internal sealed class ReflectiveDataSeedLoader : ReflectiveLoaderBase, IReflecti
                 Type: type,
                 TypeArgs: type.GetGenericTypeArgumentsOfSingleDirectInterface(typeof(IDiscoverableModelDataSeed<>))
             ))
-            .Where(t => t.TypeArgs is { Length: 1 }
-                // type argument T must implement IDiscoverableModelConfiguration<T>
-                && t.TypeArgs[0].ImplementsDirectGenericInterfaceWithTypeParameter(typeof(IDiscoverableModelConfiguration<>), t.TypeArgs[0]))
+            .Where(t => t.TypeArgs is { Length: 1 })
             .Select(type => new ReflectiveDataSeed
             (
                 OwnerType: type.Type,
@@ -69,13 +67,19 @@ internal sealed class ReflectiveDataSeedLoader : ReflectiveLoaderBase, IReflecti
 
         Log.WriteInfo($"{nameof(ReflectiveDataSeedLoader)} discovered {dataSeeds.Length} model connections.");
 
+        // get the generic Entity method
+        MethodInfo? entityTypeBuilderFactory = typeof(ModelBuilder).GetMethod(nameof(ModelBuilder.Entity), 1, []);
         foreach (ReflectiveDataSeed dataSeed in dataSeeds)
         {
             Log.WriteDiagnostic($"{nameof(ReflectiveDataSeedLoader)} loading: {dataSeed.OwnerType.Name}.");
-            // ensure that the entity types are configured
             if (discoveryContext.EntityBuilderCache.TryGetValue(dataSeed.EntityType, out EntityTypeBuilder? entityTypeBuilder) is false)
             {
-                throw new InvalidOperationException($"The entity type {dataSeed.EntityType.Name} is not configured.");
+                // create a new EntityTypeBuilder<T> for the entity type
+                // bind the generic method to the entity type
+                MethodInfo genericEntityTypeBuilderFactory = entityTypeBuilderFactory!.MakeGenericMethod(dataSeed.EntityType);
+                // invoke it to create an EntityTypeBuilder<T> where T matches the entity
+                object entityTypeBuilderObj = genericEntityTypeBuilderFactory.Invoke(builder, null)!;
+                entityTypeBuilder = (EntityTypeBuilder)entityTypeBuilderObj;
             }
             object[] data = [..(IEnumerable)dataSeed.GetDataSeed!.Invoke(obj: null, parameters: null)!];
             entityTypeBuilder.HasData(data);

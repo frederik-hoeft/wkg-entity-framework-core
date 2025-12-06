@@ -54,9 +54,8 @@ public sealed class AssemblyVersionAnalyzer : DiagnosticAnalyzer
                 return;
             }
             Version analyzerVersion = WkgEntityFrameworkCoreDiscoverySourceGeneration.VersionInfo.Version;
-            if (wkgEfCoreVersion.Major != analyzerVersion.Major
-                || wkgEfCoreVersion.Minor != analyzerVersion.Minor
-                || wkgEfCoreVersion.Build != analyzerVersion.Build)
+            // breaking changes are only supported for major and minor version changes
+            if (wkgEfCoreVersion.Major != analyzerVersion.Major || wkgEfCoreVersion.Minor != analyzerVersion.Minor)
             {
                 Diagnostic diagnostic = Diagnostic.Create(
                     s_incompatibleVersion,
