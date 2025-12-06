@@ -1,7 +1,4 @@
 ﻿using Microsoft.CodeAnalysis;
-using Wkg.EntityFrameworkCore.SourceGeneration;
-using Wkg.EntityFrameworkCore.SourceGeneration.Helpers;
-using Wkg.EntityFrameworkCore.SourceGeneration;
 using Wkg.EntityFrameworkCore.SourceGeneration.Helpers;
 
 namespace Wkg.EntityFrameworkCore.SourceGeneration.Discovery;

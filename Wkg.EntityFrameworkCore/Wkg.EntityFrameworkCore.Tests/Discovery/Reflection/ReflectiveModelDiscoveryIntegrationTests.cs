@@ -1,40 +1,36 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Wkg.Common.Extensions;
-using Wkg.EntityFrameworkCore.Configuration;
+using System.Reflection;
 using Wkg.EntityFrameworkCore.Configuration.Discovery;
+using Wkg.EntityFrameworkCore.Configuration.Policies;
 using Wkg.EntityFrameworkCore.Configuration.Policies.Defaults.EntityNamingPolicies;
 using Wkg.EntityFrameworkCore.Configuration.Policies.Defaults.PropertyMappingPolicies;
+using Wkg.EntityFrameworkCore.Configuration.Reflection.Discovery;
 using Wkg.EntityFrameworkCore.Extensions;
-using Wkg.EntityFrameworkCore.Tests.Discovery.Roslyn.TestData;
+using Wkg.EntityFrameworkCore.Tests.Discovery.TestData;
 
-namespace Wkg.EntityFrameworkCore.Tests.Discovery.Roslyn;
+namespace Wkg.EntityFrameworkCore.Tests.Discovery.Reflection;
 
 [TestClass]
-public class ModelDiscoveryIntegrationTests
+public sealed class ReflectiveModelDiscoveryIntegrationTests
 {
-    private DbContextOptions<TestDbContext> _dbContextOptions = null!;
+    private static DbContextOptions<TestDbContext<object>> CreateDbContextOptions() => CreateDbContextOptions<object>();
 
-    [TestInitialize]
-    public void Setup()
-    {
-        _dbContextOptions = new DbContextOptionsBuilder<TestDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-    }
+    private static DbContextOptions<TestDbContext<T>> CreateDbContextOptions<T>() => new DbContextOptionsBuilder<TestDbContext<T>>()
+        .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+        .Options;
 
     [TestMethod]
     public void LoadModels_ShouldConfigureAllDiscoverableEntities()
     {
-        // Arrange
-        TestModelLoader modelLoader = new();
-        
-        // Act & Assert - This will throw if the generated code has syntax errors
-        using TestDbContext context = new(_dbContextOptions, modelLoader);
+        // Arrange & Act
+        TestDiscoveryContextFactoryProvider discoveryContextFactoryProvider = new();
+        using TestDbContext context = new(CreateDbContextOptions(), discoveryContextFactoryProvider);
         IModel model = context.Model;
 
-        // Verify that all expected entities are registered
+        // Assert - Verify that all expected entity types are registered in the model
         List<IEntityType> entityTypes = [.. model.GetEntityTypes()];
         HashSet<string> entityTypeNames = [.. entityTypes.Select(et => et.ClrType.Name)];
         
@@ -49,15 +45,14 @@ public class ModelDiscoveryIntegrationTests
     public void LoadModels_RegistersEntitiesInDiscoveryContext()
     {
         // Arrange
-        IModelLoader modelLoader = new TestModelLoader();
-
+        TestDiscoveryContextFactoryProvider discoveryContextFactoryProvider = new();
+        // must be a unique context type to avoid cross-test contamination due to EF Core's internal static model caching
+        using TestDbContext<ReflectiveModelDiscoveryIntegrationTests> context = new(CreateDbContextOptions<ReflectiveModelDiscoveryIntegrationTests>(), discoveryContextFactoryProvider);
         // Act
-        ModelBuilder builder = new();
-        EntityDiscoveryContext discoveryContext = new(policies: []);
-        modelLoader.LoadModels(builder, discoveryContext);
-
+        IModel model = context.Model;
+        Thread.MemoryBarrier();
         // Assert - Verify that Register was called for each expected entity type
-        IReadOnlyDictionary<Type, EntityTypeBuilder> builderCache = discoveryContext.To<IEntityDiscoveryContext>().EntityBuilderCache;
+        IReadOnlyDictionary<Type, EntityTypeBuilder> builderCache = discoveryContextFactoryProvider.Context.ConfiguredEntities;
         Assert.IsTrue(builderCache.ContainsKey(typeof(Book)), "Book entity should be registered in discovery context");
         Assert.IsTrue(builderCache.ContainsKey(typeof(Category)), "Category entity should be registered in discovery context");
         Assert.IsTrue(builderCache.ContainsKey(typeof(Magazine)), "Magazine entity should be registered in discovery context");
@@ -69,10 +64,10 @@ public class ModelDiscoveryIntegrationTests
     public void LoadModels_BookEntity_ShouldHaveCorrectConfiguration()
     {
         // Arrange
-        TestModelLoader modelLoader = new();
-        
+        TestDiscoveryContextFactoryProvider discoveryContextFactoryProvider = new();
+        using TestDbContext context = new(CreateDbContextOptions(), discoveryContextFactoryProvider);
+
         // Act
-        using TestDbContext context = new(_dbContextOptions, modelLoader);
         IModel model = context.Model;
         IEntityType? bookEntityType = model.FindEntityType(typeof(Book));
         
@@ -126,10 +121,10 @@ public class ModelDiscoveryIntegrationTests
     public void LoadModels_CategoryMagazineRelationship_ShouldBeConfiguredCorrectly()
     {
         // Arrange
-        TestModelLoader modelLoader = new();
-        
+        TestDiscoveryContextFactoryProvider discoveryContextFactoryProvider = new();
+        using TestDbContext context = new(CreateDbContextOptions(), discoveryContextFactoryProvider);
+
         // Act
-        using TestDbContext context = new(_dbContextOptions, modelLoader);
         IModel model = context.Model;
         IEntityType? magazineEntityType = model.FindEntityType(typeof(Magazine));
         IEntityType? categoryEntityType = model.FindEntityType(typeof(Category));
@@ -161,10 +156,10 @@ public class ModelDiscoveryIntegrationTests
     public void LoadModels_BookAuthorConnection_ShouldBeConfiguredCorrectly()
     {
         // Arrange
-        TestModelLoader modelLoader = new();
-        
+        TestDiscoveryContextFactoryProvider discoveryContextFactoryProvider = new();
+        using TestDbContext context = new(CreateDbContextOptions(), discoveryContextFactoryProvider);
+
         // Act
-        using TestDbContext context = new(_dbContextOptions, modelLoader);
         IModel model = context.Model;
         IEntityType? bookAuthorEntityType = model.FindEntityType(typeof(BookAuthor));
         IEntityType? bookEntityType = model.FindEntityType(typeof(Book));
@@ -199,10 +194,10 @@ public class ModelDiscoveryIntegrationTests
     public void LoadModels_BaseModelConfiguration_ShouldBeAppliedToInheritedEntities()
     {
         // Arrange
-        TestModelLoader modelLoader = new();
-        
+        TestDiscoveryContextFactoryProvider discoveryContextFactoryProvider = new();
+        using TestDbContext context = new(CreateDbContextOptions(), discoveryContextFactoryProvider);
+
         // Act
-        using TestDbContext context = new(_dbContextOptions, modelLoader);
         IModel model = context.Model;
         IEntityType? magazineEntityType = model.FindEntityType(typeof(Magazine));
         
@@ -232,11 +227,10 @@ public class ModelDiscoveryIntegrationTests
     public void LoadModels_ShouldWorkWithDatabaseOperations()
     {
         // Arrange
-        TestModelLoader modelLoader = new();
-        
+        TestDiscoveryContextFactoryProvider discoveryContextFactoryProvider = new();
+        using TestDbContext context = new(CreateDbContextOptions(), discoveryContextFactoryProvider);
+
         // Act & Assert
-        using TestDbContext context = new(_dbContextOptions, modelLoader);
-        
         // Ensure database is created successfully
         context.Database.EnsureCreated();
 
@@ -280,7 +274,10 @@ public class ModelDiscoveryIntegrationTests
     }
 
     // Test DbContext class
-    private sealed class TestDbContext(DbContextOptions<TestDbContext> options, IModelLoader modelLoader) : DbContext(options)
+    private sealed class TestDbContext(DbContextOptions<TestDbContext<object>> options, TestDiscoveryContextFactoryProvider discoveryContextFactoryProvider) 
+        : TestDbContext<object>(options, discoveryContextFactoryProvider);
+
+    private class TestDbContext<T>(DbContextOptions<TestDbContext<T>> options, TestDiscoveryContextFactoryProvider discoveryContextFactoryProvider) : DbContext(options)
     {
         public DbSet<Book> Books => Set<Book>();
         public DbSet<Category> Categories => Set<Category>();
@@ -292,9 +289,32 @@ public class ModelDiscoveryIntegrationTests
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.LoadModels(modelLoader, policies => policies
-                .AddEntityNamingPolicy(EntityNamingPolicy.AllowImplicit)
-                .AddPropertyMappingPolicy(PropertyMappingPolicy.AllowImplicit));
+            modelBuilder.LoadReflectiveModels(options => options
+                .ConfigureDiscovery(discovery => discovery
+                    .AddTargetAssembly<ThisAssembly>()
+                    .UseDiscoveryContextFactory(discoveryContextFactoryProvider.CreateContext))
+                .ConfigurePolicies(policies => policies
+                    .AddEntityNamingPolicy(EntityNamingPolicy.AllowImplicit)
+                    .AddPropertyMappingPolicy(PropertyMappingPolicy.AllowImplicit)));
         }
+    }
+
+    private sealed class ThisAssembly : ITargetAssembly
+    {
+        public static Assembly Assembly => typeof(ThisAssembly).Assembly;
+    }
+
+    private sealed class TestDiscoveryContextFactoryProvider
+    {
+        private TestReflectiveEntityDiscoveryContext? _context;
+
+        public TestReflectiveEntityDiscoveryContext Context => _context ?? throw new InvalidOperationException("Context has not been created yet.");
+
+        public ReflectiveEntityDiscoveryContext CreateContext(IEntityPolicy[] policies) => _context ??= new TestReflectiveEntityDiscoveryContext(policies);
+    }
+
+    private sealed class TestReflectiveEntityDiscoveryContext(IEntityPolicy[] policies) : ReflectiveEntityDiscoveryContext(policies)
+    {
+        public IReadOnlyDictionary<Type, EntityTypeBuilder> ConfiguredEntities => EntityBuilderCache;
     }
 }

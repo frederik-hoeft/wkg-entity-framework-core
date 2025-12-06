@@ -1,4 +1,6 @@
 ﻿using System.Reflection;
+using Wkg.EntityFrameworkCore.Configuration.Discovery;
+using Wkg.EntityFrameworkCore.Configuration.Policies;
 using Wkg.EntityFrameworkCore.Configuration.Reflection.Attributes;
 
 namespace Wkg.EntityFrameworkCore.Configuration.Reflection.Discovery;
@@ -10,6 +12,8 @@ public class DiscoveryOptionsBuilder : IDiscoveryOptionsBuilder
 {
     private readonly HashSet<Assembly> _assemblies = [];
     private readonly HashSet<Type> _databaseEngines = [];
+
+    internal Func<IEntityPolicy[], ReflectiveEntityDiscoveryContext>? DiscoveryContextFactory { get; private set; }
 
     /// <summary>
     /// Creates a new instance of <see cref="DiscoveryOptionsBuilder"/>.
@@ -40,4 +44,12 @@ public class DiscoveryOptionsBuilder : IDiscoveryOptionsBuilder
     /// Builds the <see cref="DiscoveryOptions"/> instance.
     /// </summary>
     public DiscoveryOptions Build() => new([.. _assemblies], [.. _databaseEngines]);
+
+    /// <inheritdoc />
+    public IDiscoveryOptionsBuilder UseDiscoveryContextFactory(Func<IEntityPolicy[], ReflectiveEntityDiscoveryContext> factory)
+    {
+        ArgumentNullException.ThrowIfNull(factory);
+        DiscoveryContextFactory = factory;
+        return this;
+    }
 }

@@ -5,6 +5,7 @@ using Wkg.Logging;
 using Wkg.Reflection.Extensions;
 using Wkg.EntityFrameworkCore.Configuration.Discovery;
 using Wkg.EntityFrameworkCore.Configuration.Reflection.Discovery;
+using System.Collections;
 
 namespace Wkg.EntityFrameworkCore.Configuration.Reflection;
 
@@ -76,7 +77,7 @@ internal sealed class ReflectiveDataSeedLoader : ReflectiveLoaderBase, IReflecti
             {
                 throw new InvalidOperationException($"The entity type {dataSeed.EntityType.Name} is not configured.");
             }
-            object[] data = (object[])dataSeed.GetDataSeed!.Invoke(obj: null, parameters: null)!;
+            object[] data = [..(IEnumerable)dataSeed.GetDataSeed!.Invoke(obj: null, parameters: null)!];
             entityTypeBuilder.HasData(data);
 
             Log.WriteDiagnostic($"{nameof(ReflectiveDataSeedLoader)} loaded {dataSeed.OwnerType.Name} providing {data.Length} seed data entries for entity type {dataSeed.EntityType.Name}.");

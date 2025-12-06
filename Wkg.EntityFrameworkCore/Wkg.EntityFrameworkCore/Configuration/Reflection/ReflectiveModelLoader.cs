@@ -13,7 +13,7 @@ namespace Wkg.EntityFrameworkCore.Configuration.Reflection;
 /// </summary>
 internal sealed class ReflectiveModelLoader : ReflectiveLoaderBase, IReflectiveModelLoader
 {
-    public static readonly string s_runtimeMethodName = $"{typeof(IDiscoverableBaseModelConfiguration<>).Namespace}.{nameof(IDiscoverableBaseModelConfiguration<>)}<{{0}}>.{nameof(IDiscoverableBaseModelConfiguration<>.ConfigureBaseModel)}";
+    public static readonly string s_runtimeMethodName = $"{typeof(IBaseModelConfiguration<>).Namespace}.{nameof(IBaseModelConfiguration<>)}<{{0}}>.{nameof(IBaseModelConfiguration<>.ConfigureBaseModel)}";
     [Obsolete("This is kept for backward compatibility. will be removed in future major release.")]
     // TODO: remove in future major release
     public static readonly string s_legacyRuntimeMethodName = $"{typeof(IReflectiveBaseModelConfiguration<>).Namespace}.{nameof(IReflectiveBaseModelConfiguration<>)}<{{0}}>.{nameof(IReflectiveBaseModelConfiguration<>.ConfigureBaseModel)}";

@@ -1,6 +1,6 @@
 using Wkg.EntityFrameworkCore.Configuration;
 
-namespace Wkg.EntityFrameworkCore.Tests.Discovery.Roslyn.TestData;
+namespace Wkg.EntityFrameworkCore.Tests.Discovery.TestData;
 
 internal sealed class CategoryDataSeed : IDiscoverableModelDataSeed<Category>
 {

@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Wkg.EntityFrameworkCore.Configuration;
 
-namespace Wkg.EntityFrameworkCore.Tests.Discovery.Roslyn.TestData;
+namespace Wkg.EntityFrameworkCore.Tests.Discovery.TestData;
 
 // Junction table for many-to-many relationship using IDiscoverableModelConnection
 internal sealed class BookAuthor : IDiscoverableModelConnection<BookAuthor, Book, Author>

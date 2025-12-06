@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Wkg.EntityFrameworkCore.Configuration;
 
-namespace Wkg.EntityFrameworkCore.Tests.Discovery.Roslyn.TestData;
+namespace Wkg.EntityFrameworkCore.Tests.Discovery.TestData;
 
 // Base model for inheritance testing
 internal abstract class BaseProduct : IDiscoverableBaseModelConfiguration<BaseProduct>

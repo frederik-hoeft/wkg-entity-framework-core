@@ -28,7 +28,7 @@ public static class ModelBuilderExtensions
         /// <param name="policies">The policies to be enforced on the discovered entities.</param>
         /// <returns>The <see cref="IEntityDiscoveryContext"/>.</returns>
         [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "API consistency with other extension methods.")]
-        public IEntityDiscoveryContext CreateDiscoveryContext(IEntityPolicy[] policies) => new EntityDiscoveryContext(policies);
+        public IEntityDiscoveryContext CreateDiscoveryContext(IEntityPolicy[] policies) => new ReflectiveEntityDiscoveryContext(policies);
 
         /// <summary>
         /// Loads and configures the specified <typeparamref name="TModel"/>.
@@ -96,24 +96,26 @@ public static class ModelBuilderExtensions
         }
 
         /// <summary>
-        /// Loads models using the specified <paramref name="loader"/> validates them against the configured policies.
+        /// Loads models using the specified <paramref name="loader"/> and configures them using the specified <paramref name="configureOptions"/>.
         /// </summary>
         /// <param name="loader">The model loader to load the models from.</param>
-        /// <param name="configurePolicies">The policies to configure the discovery process.</param>
+        /// <param name="configureOptions">The options to configure the discovery process.</param>
         /// <returns>The model builder.</returns>
-        public ModelBuilder LoadModels(IModelLoader loader, Action<IPolicyOptionsBuilder>? configurePolicies = null)
+        public ModelBuilder LoadModels(IModelLoader loader, Action<IDiscoverableModelOptionsBuilder>? configureOptions = null)
         {
             ArgumentNullException.ThrowIfNull(self);
             ArgumentNullException.ThrowIfNull(loader);
 
-            IPolicyOptionsBuilder policyOptionsBuilder = new PolicyOptionsBuilder();
-            configurePolicies?.Invoke(policyOptionsBuilder);
+            DiscoverableModelOptionsBuilder optionsBuilder = new();
+            configureOptions?.Invoke(optionsBuilder);
+            IPolicyOptionsBuilder policyOptionsBuilder = optionsBuilder.PolicyOptionsBuilder;
 
             EntityNaming.AddDefaults(policyOptionsBuilder);
             PropertyMapping.AddDefaults(policyOptionsBuilder);
 
             IEntityPolicy[] policies = policyOptionsBuilder.Build();
-            EntityDiscoveryContext discoveryContext = new(policies);
+            IEntityDiscoveryContext discoveryContext = optionsBuilder.DiscoveryContextFactory?.Invoke(policies) 
+                ?? new EntityDiscoveryContext(policies);
             loader.LoadModels(self, discoveryContext);
             discoveryContext.AuditPolicies();
             return self;
@@ -130,17 +132,18 @@ public static class ModelBuilderExtensions
         /// Models implementing <see cref="IDiscoverableModelConfiguration{T}"/> should not be loaded explicitly using <see cref="LoadModel{TModel}(ModelBuilder, IEntityDiscoveryContext)"/>.
         /// </para>
         /// </remarks>
-        public ModelBuilder LoadReflectiveModels(Action<IModelOptionsBuilder>? configureOptions)
+        public ModelBuilder LoadReflectiveModels(Action<IReflectiveModelOptionsBuilder>? configureOptions)
         {
             ArgumentNullException.ThrowIfNull(self);
 
-            ModelOptionsBuilder modelOptions = new();
+            ReflectiveModelOptionsBuilder modelOptions = new();
             configureOptions?.Invoke(modelOptions);
             AddDefaults(modelOptions);
             IEntityPolicy[] policies = modelOptions.PolicyOptionsBuilder.Build();
             DiscoveryOptions discoveryOptions = modelOptions.DiscoveryOptionsBuilder.Build();
 
-            IReflectiveEntityDiscoveryContext discoveryContext = new EntityDiscoveryContext(policies);
+            IReflectiveEntityDiscoveryContext discoveryContext = modelOptions.DiscoveryOptionsBuilder.DiscoveryContextFactory?.Invoke(policies)
+                ?? new ReflectiveEntityDiscoveryContext(policies);
             discoveryContext.AddLoader(new ReflectiveModelLoader());
             discoveryContext.AddLoader(new ReflectiveConnectionLoader());
             discoveryContext.AddLoader(new ReflectiveDataSeedLoader());
@@ -149,7 +152,7 @@ public static class ModelBuilderExtensions
             return self;
         }
 
-        private static void AddDefaults(ModelOptionsBuilder modelOptions)
+        private static void AddDefaults(ReflectiveModelOptionsBuilder modelOptions)
         {
             EntityNaming.AddDefaults(modelOptions.PolicyOptionsBuilder);
             PropertyMapping.AddDefaults(modelOptions.PolicyOptionsBuilder);

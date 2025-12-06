@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Wkg.EntityFrameworkCore.Configuration;
 
-namespace Wkg.EntityFrameworkCore.Tests.Discovery.Roslyn.TestData;
+namespace Wkg.EntityFrameworkCore.Tests.Discovery.TestData;
 
 // Many-to-many relationship entities
 internal sealed class Author : IDiscoverableModelConfiguration<Author>
