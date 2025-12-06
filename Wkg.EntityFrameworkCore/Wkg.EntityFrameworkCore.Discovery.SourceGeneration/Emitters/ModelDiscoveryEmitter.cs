@@ -135,7 +135,7 @@ internal static class ModelDiscoveryEmitter
             }
 
             file readonly struct {{s_types["EntityDataSeedLoader"]}}<TEntity, TSeed>
-                where TEntity : class, {{s_types["IModelConfiguration"]}}<TEntity>
+                where TEntity : class
                 where TSeed : {{s_types["IModelDataSeed"]}}<TEntity>
             {
                 internal readonly {{s_types["EntityTypeBuilder"]}}<TEntity> EntityBuilder { get; }
