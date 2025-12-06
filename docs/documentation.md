@@ -203,7 +203,7 @@ To use it:
 Example:
 
 ```csharp
-using Wkg.EntityFrameworkCore.SourceGeneration;
+using Wkg.EntityFrameworkCore.Discovery.SourceGeneration;
 
 [ModelLoader(
     AssemblyDiscoveryFailureBehavior = AssemblyDiscoveryFailureBehavior.Warning,
@@ -250,7 +250,7 @@ The source generator provides compile-time diagnostics for common issues. All di
 
 | Diagnostic ID | Category | Title | Description |
 |---------------|----------|-------|-------------|
-| `WKGLIBEFC001` | Compatibility | Incompatible assembly version. | Source generator 'Wkg.EntityFrameworkCore.SourceGeneration' must have the same version as 'Wkg.EntityFrameworkCore' to ensure compatibility. 'Wkg.EntityFrameworkCore.SourceGeneration' has version '{0}', but expected version was '{1}' from 'Wkg.EntityFrameworkCore'.<br>Ensures that the source generator 'Wkg.EntityFrameworkCore.SourceGeneration' and the dependent assembly 'Wkg.EntityFrameworkCore' have matching versions to prevent code generation issues due to API mismatches. |
+| `WKGLIBEFC001` | Compatibility | Incompatible assembly version. | Source generator 'Wkg.EntityFrameworkCore.Discovery.SourceGeneration' must have the same version as 'Wkg.EntityFrameworkCore' to ensure compatibility. 'Wkg.EntityFrameworkCore.Discovery.SourceGeneration' has version '{0}', but expected version was '{1}' from 'Wkg.EntityFrameworkCore'.<br>Ensures that the source generator 'Wkg.EntityFrameworkCore.Discovery.SourceGeneration' and the dependent assembly 'Wkg.EntityFrameworkCore' have matching versions to prevent code generation issues due to API mismatches. |
 | `WKGLIBEFC002` | Compatibility | Missing target assembly for model discovery. | Target assembly '{0}' specified in the ModelLoaderAttribute could not be found in the compilation. Ensure that the assembly name is correct and that the assembly is referenced by the project. |
 | `WKGLIBEFC003` | Usage | Invalid model discovery filter attribute. | The model discovery filter attribute provided as type argument `T` to `ModelDiscoveryFilterAttribute<T>` does not derive from `DatabaseEngineModelAttribute`. |
 | `WKGLIBEFC004` | Design | No discoverable models found. | None of the target assemblies contain any classes implementing `IDiscoverableModelConfiguration<T>`, `IDiscoverableModelConnection<TConnection, TLeft, TRight>`, or `IDiscoverableModelDataSeed<TModel>`. This may indicate a misconfiguration of the source generator. |
