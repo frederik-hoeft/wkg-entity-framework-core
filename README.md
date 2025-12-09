@@ -8,7 +8,7 @@
 
 Wkg.EntityFrameworkCore is a company-internal library providing the Reflective Entity Configuration And Procedure mapping extension (RECAP) to simplify the configuration of Entity Framework Core models, introduce ORM-compatible stored procedure and function mapping, add support for UUID data types, policy validation for discovered entities, and more. The library helps to reduce the amount of boilerplate code required to configure Entity Framework Core models and stored procedures, bringing standardization, validation, and easier maintenance to our projects at WKG Software GmbH.
 
-As part of our commitment to open-source software, we are making this library [available to the public](https://github.com/WKG-Software-GmbH/wkg-entity-framework-core) under the GNU General Public License v3.0. We hope that it will be useful to other developers and that the community will contribute to its further development.
+As part of our commitment to open-source software, we are making this library [available to the public](https://github.com/WKG-Software-GmbH/wkg-entity-framework-core) under the the MIT License. We hope that it will be useful to other developers and that the community will contribute to its further development.
 
 ## Abstract
 

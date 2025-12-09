@@ -16,7 +16,7 @@
         <PackageId>Wkg.EntityFrameworkCore</PackageId>
         <Title>WKG Entity Framework Core</Title>
         <IsPackable>true</IsPackable>
-        <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <RepositoryUrl>https://github.com/WKG-Software-GmbH/wkg-entity-framework-core</RepositoryUrl>
         <PackageProjectUrl>https://github.com/WKG-Software-GmbH/wkg-entity-framework-core</PackageProjectUrl>
         <Description>
