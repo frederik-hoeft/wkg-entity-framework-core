@@ -55,4 +55,4 @@ deploy-analyzer-public:
   extends: .deploy-nuget-public
   variables:
     PROJECT_FILE_PATH: "${ANALYZER_FILE_PATH}"
-    DOTNET_CI_VERSION_FILE: "${PROJECT_ROOT}/Wkg.EntityFrameworkCore.Discovery.SourceGeneration/WkgEntityFrameworkCoreSourceGeneration.cs"
+    DOTNET_CI_VERSION_FILE: "${PROJECT_ROOT}/Wkg.EntityFrameworkCore.Discovery.SourceGeneration/WkgEntityFrameworkCoreDiscoverySourceGeneration.cs"
