@@ -9,17 +9,17 @@ using Wkg.EntityFrameworkCore.Configuration.Reflection.Discovery;
 namespace Wkg.EntityFrameworkCore.Configuration.Reflection;
 
 /// <summary>
-/// Loads and configures all <see cref="IReflectiveModelConnection{TConnection, TSource, TTarget}"/> implementations.
+/// Loads and configures all <see cref="IDiscoverableModelConnection{TConnection, TSource, TTarget}"/> implementations.
 /// </summary>
-internal class ReflectiveConnectionLoader : ReflectiveLoaderBase, IReflectiveEntityLoader
+internal sealed class ReflectiveConnectionLoader : ReflectiveLoaderBase, IReflectiveModelLoader
 {
     /// <summary>
-    /// Loads and configures all <see cref="IReflectiveModelConnection{TConnection, TSource, TTarget}"/> implementations.
+    /// Loads and configures all <see cref="IDiscoverableModelConnection{TConnection, TSource, TTarget}"/> implementations.
     /// </summary>
     /// <param name="builder">The <see cref="ModelBuilder"/> to configure.</param>
     /// <param name="discoveryContext">The <see cref="IEntityDiscoveryContext"/> that has been used for model discovery.</param>
     /// <param name="options">The options to use for discovery.</param>
-    public void LoadEntities(ModelBuilder builder, IEntityDiscoveryContext discoveryContext, DiscoveryOptions options)
+    public void LoadModels(ModelBuilder builder, IEntityDiscoveryContext discoveryContext, DiscoveryOptions options)
     {
         Assembly[]? targetAssemblies = null;
         if (options.TargetAssemblies.Length > 0)
@@ -30,14 +30,20 @@ internal class ReflectiveConnectionLoader : ReflectiveLoaderBase, IReflectiveEnt
 
         Log.WriteInfo($"{nameof(ReflectiveConnectionLoader)} is initializing.");
 
-        ReflectiveConnection[] connections = TargetAssembliesOrWithEntryPoint(targetAssemblies)
+#pragma warning disable CS0618 // Type or member is obsolete
+        // TODO: drop support for IReflectiveModelConnection in future major release
+        ReflectiveConnection[] connections = 
+        [
+            .. TargetAssembliesOrWithEntryPoint(targetAssemblies)
             // get all types in these assemblies
             .SelectMany(asm => asm.GetTypes()
                 .Where(type =>
                     // only keep classes
                     type.IsClass
-                    // only keep classes that implement IReflectiveModelConnection<TConnection, TFrom, TTo>
-                    && type.ImplementsGenericInterfaceDirectly(typeof(IReflectiveModelConnection<,,>))
+                    // only keep classes that implement IDiscoverableModelConnection<TConnection, TFrom, TTo>
+                    && (type.ImplementsGenericInterfaceDirectly(typeof(IDiscoverableModelConnection<,,>)) 
+                        // TODO: drop support for IReflectiveModelConnection in future major release
+                        || type.ImplementsGenericInterfaceDirectly(typeof(IReflectiveModelConnection<,,>)))
                     // only keep classes that have the specified database engine attribute if enabled
                     && (dbEngineModelAttributeTypes.Length == 0 || dbEngineModelAttributeTypes.Any(attribute => type.GetCustomAttribute(attribute) is not null))))
             // just to be sure ...
@@ -45,13 +51,18 @@ internal class ReflectiveConnectionLoader : ReflectiveLoaderBase, IReflectiveEnt
             .Select(type =>
             (
                 Type: type,
-                TypeArgs: type.GetGenericTypeArgumentsOfSingleDirectInterface(typeof(IReflectiveModelConnection<,,>))
+                TypeArgs: type.GetGenericTypeArgumentsOfSingleDirectInterface(typeof(IDiscoverableModelConnection<,,>))
+                    // TODO: drop support for IReflectiveModelConnection in future major release
+                    ?? type.GetGenericTypeArgumentsOfSingleDirectInterface(typeof(IReflectiveModelConnection<,,>))
             ))
             .Where(t => t.TypeArgs is { Length: 3 }
                 // TConnection must match the implementing type
                 && t.TypeArgs[0] == t.Type
                 // TFrom and TTo must implement IReflectiveModelConfiguration<T> (be reflectively loaded)
-                && t.TypeArgs.Skip(1).All(typeParam => typeParam.ImplementsDirectGenericInterfaceWithTypeParameter(typeof(IReflectiveModelConfiguration<>), typeParam)))
+                && t.TypeArgs.Skip(1).All(typeParam => typeParam
+                    .ImplementsDirectGenericInterfaceWithTypeParameter(typeof(IDiscoverableModelConfiguration<>), typeParam)
+                    // TODO: drop support for IReflectiveModelConfiguration in future major release
+                    || typeParam.ImplementsDirectGenericInterfaceWithTypeParameter(typeof(IReflectiveModelConfiguration<>), typeParam)))
             .Select(type => new ReflectiveConnection
             (
                 Type: type.Type,
@@ -60,7 +71,7 @@ internal class ReflectiveConnectionLoader : ReflectiveLoaderBase, IReflectiveEnt
                 // get the exact Configure method declared by IModelConfiguration<T>
                 Connect: type.Type.GetMethod
                 (
-                    nameof(ModelConnectionInfoForReflection_DontChange.Connect),
+                    nameof(IModelConnection<,,>.Connect),
                     BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly,
                     [
                         typeof(EntityTypeBuilder<>).MakeGenericType(type.TypeArgs[1]),
@@ -68,7 +79,8 @@ internal class ReflectiveConnectionLoader : ReflectiveLoaderBase, IReflectiveEnt
                     ])
                 ))
             .Where(connection => connection.Connect is not null)
-            .ToArray();
+        ];
+#pragma warning restore CS0618 // Type or member is obsolete
 
         Log.WriteInfo($"{nameof(ReflectiveConnectionLoader)} discovered {connections.Length} model connections.");
 
@@ -100,24 +112,9 @@ internal class ReflectiveConnectionLoader : ReflectiveLoaderBase, IReflectiveEnt
 
             // create an entity type builder for the connection entity and add it to the cache for policy validation
             EntityTypeBuilder connectionBuilder = builder.Entity(connection.Type);
-            discoveryContext.EntityBuilderCache.Add(connection.Type, connectionBuilder);
+            discoveryContext.Register(connection.Type, connectionBuilder);
         }
         Log.WriteInfo($"{nameof(ReflectiveConnectionLoader)} loaded {connections.Length} model connections.");
         Log.WriteInfo($"{nameof(ReflectiveConnectionLoader)} is exiting.");
     }
-}
-
-// internal dummy class as a target for nameof
-file class ModelConnectionInfoForReflection_DontChange
-    : IReflectiveModelConfiguration<ModelConnectionInfoForReflection_DontChange>,
-    IReflectiveModelConnection<ModelConnectionInfoForReflection_DontChange, ModelConnectionInfoForReflection_DontChange, ModelConnectionInfoForReflection_DontChange>
-{
-    public static void Configure(EntityTypeBuilder<ModelConnectionInfoForReflection_DontChange> _) => 
-        throw new NotSupportedException();
-
-    public static void ConfigureConnection(EntityTypeBuilder<ModelConnectionInfoForReflection_DontChange> self) => 
-        throw new NotSupportedException();
-
-    public static void Connect(EntityTypeBuilder<ModelConnectionInfoForReflection_DontChange> _, EntityTypeBuilder<ModelConnectionInfoForReflection_DontChange> _1) => 
-        throw new NotSupportedException();
 }

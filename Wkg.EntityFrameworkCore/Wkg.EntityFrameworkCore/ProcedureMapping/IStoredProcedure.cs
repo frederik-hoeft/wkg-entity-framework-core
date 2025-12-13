@@ -12,7 +12,7 @@ public interface IStoredProcedure
     /// <summary>
     /// The <see cref="DatabaseFacade"/> to be used for executing the stored procedure.
     /// </summary>
-    public DatabaseFacade DbContext { get; set; }
+    DatabaseFacade DbContext { get; set; }
 
     /// <summary>
     /// The stateful runtime execution context of the stored procedure. 
@@ -21,5 +21,5 @@ public interface IStoredProcedure
     /// The execution context contains the current state of the stored procedure, such as the values of the ADO.NET <see cref="DbParameter"/>s. 
     /// Therefore it must not be shared between different threads, but can be reused for multiple sequential executions of the same stored procedure.
     /// </remarks>
-    public IProcedureExecutionContext ExecutionContext { get; set; }
+    IProcedureExecutionContext ExecutionContext { get; set; }
 }

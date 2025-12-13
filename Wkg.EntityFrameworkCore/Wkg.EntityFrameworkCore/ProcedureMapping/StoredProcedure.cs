@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
+﻿using Microsoft.EntityFrameworkCore.Infrastructure;
 using Wkg.EntityFrameworkCore.ProcedureMapping.ResultCollections;
 using Wkg.EntityFrameworkCore.ProcedureMapping.Runtime;
 

@@ -4,5 +4,5 @@ namespace Wkg.EntityFrameworkCore.Configuration.Discovery;
 
 internal interface IReflectiveEntityDiscoveryContext : IEntityDiscoveryContext, IReflectiveDiscoveryContext
 {
-    void AddLoader(IReflectiveEntityLoader loader);
+    void AddLoader(IReflectiveModelLoader loader);
 }

@@ -5,27 +5,36 @@ stages:
   - deploy-baget
 
 variables:
-  PROJECT_DIRECTORY: "Wkg.EntityFrameworkCore/Wkg.EntityFrameworkCore"
-  PROJECT_FILE_PATH: "${PROJECT_DIRECTORY}/Wkg.EntityFrameworkCore.csproj"
-  MAJOR_VERSION: "9"
+  PROJECT_ROOT: "Wkg.EntityFrameworkCore"
+  LIBRARY_FILE_PATH: "${PROJECT_ROOT}/Wkg.EntityFrameworkCore/Wkg.EntityFrameworkCore.csproj"
+  TEST_FILE_PATH: "${PROJECT_ROOT}/Wkg.EntityFrameworkCore.Tests/Wkg.EntityFrameworkCore.Tests.csproj"
+  ANALYZER_FILE_PATH: "${PROJECT_ROOT}/Wkg.EntityFrameworkCore.Discovery.SourceGeneration/Wkg.EntityFrameworkCore.Discovery.SourceGeneration.csproj"
+  MAJOR_VERSION: "10"
   MINOR_VERSION: "0"
 
 include:
   - project: 'wkg/gitlab-templates'
-    ref: 'v1.2.19'
+    ref: 'analyzer-deployment-target'
     file:
-      - '/jobs/build_dotnet_9.yml'
-      - '/jobs/test_dotnet_9.yml'
+      - '/jobs/build_dotnet_10.yml'
+      - '/jobs/test_dotnet_10.yml'
       - '/jobs/increase_version.yml'
-      - '/jobs/deploy_nuget_dotnet_9.yml'
+      - '/jobs/deploy_nuget_dotnet_10.yml'
 
-build:
+build-library:
   extends: .build
+  variables:
+    PROJECT_FILE_PATH: "${LIBRARY_FILE_PATH}"
 
-test:
+build-analyzer:
+  extends: .build
+  variables:
+    PROJECT_FILE_PATH: "${ANALYZER_FILE_PATH}"
+
+test-library:
   extends: .test
   variables:
-    TEST_PROJECT_FILE_PATH: "Wkg.EntityFrameworkCore/Wkg.EntityFrameworkCore.Tests/Wkg.EntityFrameworkCore.Tests.csproj"
+    TEST_PROJECT_FILE_PATH: "${TEST_FILE_PATH}"
 
 increase-version:
   extends: .increase-version
@@ -36,7 +45,14 @@ increase-version:
     - /^dev-.*$/ 
     - /^diag-.*$/
 
-deploy:
+deploy-library-public:
   extends: .deploy-nuget-public
   variables:
-    DOTNET_CI_VERSION_FILE: "${PROJECT_DIRECTORY}/WkgEntityFrameworkCore.cs"
+    PROJECT_FILE_PATH: "${LIBRARY_FILE_PATH}"
+    DOTNET_CI_VERSION_FILE: "${PROJECT_ROOT}/Wkg.EntityFrameworkCore/WkgEntityFrameworkCore.cs"
+
+deploy-analyzer-public:
+  extends: .deploy-nuget-public
+  variables:
+    PROJECT_FILE_PATH: "${ANALYZER_FILE_PATH}"
+    DOTNET_CI_VERSION_FILE: "${PROJECT_ROOT}/Wkg.EntityFrameworkCore.Discovery.SourceGeneration/WkgEntityFrameworkCoreDiscoverySourceGeneration.cs"

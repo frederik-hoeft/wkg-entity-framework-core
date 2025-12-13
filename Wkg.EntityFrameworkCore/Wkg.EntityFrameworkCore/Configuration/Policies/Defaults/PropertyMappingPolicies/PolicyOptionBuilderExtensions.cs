@@ -12,8 +12,10 @@ public static class PolicyOptionBuilderExtensions
     /// <param name="propertyMapping">The <see cref="PropertyMappingPolicy"/> to add to the policy options.</param>
     /// <returns>The same <see cref="IPolicyOptionsBuilder"/> instance for method chaining.</returns>
     /// <exception cref="ArgumentOutOfRangeException">When the <paramref name="propertyMapping"/> is not a valid <see cref="PropertyMappingPolicy"/> enum member.</exception>
-    public static IPolicyOptionsBuilder AddPropertyMappingPolicy(this IPolicyOptionsBuilder builder, PropertyMappingPolicy propertyMapping) =>
-        builder.AddPolicy<PropertyMapping>(policy => _ = propertyMapping switch
+    public static IPolicyOptionsBuilder AddPropertyMappingPolicy(this IPolicyOptionsBuilder builder, PropertyMappingPolicy propertyMapping)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        return builder.AddPolicy<PropertyMapping>(policy => _ = propertyMapping switch
         {
             PropertyMappingPolicy.AllowImplicit => Do(policy.AllowImplicit),
             PropertyMappingPolicy.IgnoreImplicit => Do(policy.IgnoreImplicit),
@@ -21,6 +23,7 @@ public static class PolicyOptionBuilderExtensions
             PropertyMappingPolicy.RequireExplicit => Do(policy.RequireExplicit),
             _ => throw new ArgumentOutOfRangeException(nameof(propertyMapping), propertyMapping, "Invalid property mapping policy.")
         });
+    }
 }
 
 /// <summary>

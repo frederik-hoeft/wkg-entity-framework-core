@@ -1,32 +1,30 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Wkg.Common.Extensions;
-using Wkg.Logging;
-using Wkg.EntityFrameworkCore.Configuration.Policies;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System.Runtime.ExceptionServices;
-using Microsoft.EntityFrameworkCore;
-using Wkg.EntityFrameworkCore.Configuration.Reflection.Discovery;
-using System.Runtime.CompilerServices;
-using Wkg.EntityFrameworkCore.Configuration.Reflection;
+using Wkg.Common.Extensions;
+using Wkg.EntityFrameworkCore.Configuration.Policies;
+using Wkg.Logging;
 
 namespace Wkg.EntityFrameworkCore.Configuration.Discovery;
 
-/// <inheritdoc cref="IEntityDiscoveryContext"/>
 /// <summary>
-/// Initializes a new instance of the <see cref="EntityDiscoveryContext"/> class using the specified <paramref name="policies"/>.
+/// A default implementation of <see cref="IEntityDiscoveryContext"/>.
 /// </summary>
-/// <param name="policies">The policies to apply to enforce on discovered entities.</param>
-public class EntityDiscoveryContext(IEntityPolicy[] policies) : IReflectiveEntityDiscoveryContext
+/// <param name="policies"></param>
+public class EntityDiscoveryContext(IEntityPolicy[] policies) : IEntityDiscoveryContext
 {
-    private static readonly ConditionalWeakTable<ModelBuilder, HashSet<Type>?> s_loadedDatabaseEngines = [];
-    private readonly Dictionary<Type, IReflectiveEntityLoader> _loaders = [];
+    /// <summary>
+    /// Caches the entity builders for discovered entity types.
+    /// </summary>
+    protected Dictionary<Type, EntityTypeBuilder> EntityBuilderCache { get; } = [];
 
-    IDictionary<Type, EntityTypeBuilder> IEntityDiscoveryContext.EntityBuilderCache { get; } = new Dictionary<Type, EntityTypeBuilder>();
+    IReadOnlyDictionary<Type, EntityTypeBuilder> IEntityDiscoveryContext.EntityBuilderCache => EntityBuilderCache;
 
     /// <inheritdoc/>
     public IEntityPolicy[] Policies => policies;
 
     /// <inheritdoc/>
-    public void AuditPolicies()
+    public virtual void AuditPolicies()
     {
         IEntityDiscoveryContext self = this.To<IEntityDiscoveryContext>();
 
@@ -64,41 +62,17 @@ public class EntityDiscoveryContext(IEntityPolicy[] policies) : IReflectiveEntit
         Log.WriteInfo($"Audit completed. {self.EntityBuilderCache.Count} entities loaded and configured.");
     }
 
-    void IReflectiveEntityDiscoveryContext.AddLoader(IReflectiveEntityLoader loader) => _loaders.Add(loader.GetType(), loader);
+    void IEntityDiscoveryContext.Register(Type entityType, EntityTypeBuilder builder) => Register(entityType, builder);
 
-    void IReflectiveDiscoveryContext.Discover(ModelBuilder builder, DiscoveryOptions options)
+    /// <inheritdoc cref="IEntityDiscoveryContext.Register(Type, EntityTypeBuilder)"/>
+    protected virtual void Register(Type entityType, EntityTypeBuilder builder)
     {
-        if (s_loadedDatabaseEngines.TryGetValue(builder, out HashSet<Type>? loadedDatabaseEngines))
+        ArgumentNullException.ThrowIfNull(entityType);
+        ArgumentNullException.ThrowIfNull(builder);
+
+        if (!EntityBuilderCache.TryAdd(entityType, builder))
         {
-            // this ORM model builder has already been configured previously
-            // null means that all database engines have been loaded
-            if (loadedDatabaseEngines is null)
-            {
-                throw new InvalidOperationException("ORM model builder has already been configured for all reflectively loaded entities.");
-            }
-            Type[] dbEngineModelAttributeTypes = options.TargetDatabaseEngineAttributes;
-            if (options.TargetDatabaseEngineAttributes.Length == 0)
-            {
-                throw new InvalidOperationException($"Cannot configure ORM model builder for all reflectively loaded entities, since it has already been configured to target specific database engines: {string.Join(", ", loadedDatabaseEngines.Select(t => t.Name))}.");
-            }
-            foreach (Type type in dbEngineModelAttributeTypes)
-            {
-                if (!loadedDatabaseEngines.Add(type))
-                {
-                    throw new InvalidOperationException($"The database engine {type.Name} has already been loaded.");
-                }
-                Log.WriteInfo($"Added discovery target for entities decorated with {type.Name}.");
-            }
-        }
-        else
-        {
-            // this ORM model builder has not been configured previously
-            loadedDatabaseEngines = options.TargetDatabaseEngineAttributes.Length == 0 ? null : [];
-            s_loadedDatabaseEngines.Add(builder, loadedDatabaseEngines);
-        }
-        foreach (IReflectiveEntityLoader loader in _loaders.Values)
-        {
-            loader.LoadEntities(builder, this, options);
+            throw new InvalidOperationException($"The entity type {entityType.FullName} has already been registered.");
         }
     }
 }

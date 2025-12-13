@@ -2,7 +2,7 @@
 
 namespace Wkg.EntityFrameworkCore.Configuration.Policies.Defaults.InheritanceValidationPolicies.Internals;
 
-internal class InheritanceValidationBuilder<TBaseType>(ValidationFailureDelegate failureDelegate) : IInheritanceValidationBuilder<TBaseType> where TBaseType : class
+internal sealed class InheritanceValidationBuilder<TBaseType>(ValidationFailureDelegate failureDelegate) : IInheritanceValidationBuilder<TBaseType> where TBaseType : class
 {
     private readonly HashSet<Type> _exceptedTypes = [];
     private readonly HashSet<Type> _exceptedBaseTypes = [];

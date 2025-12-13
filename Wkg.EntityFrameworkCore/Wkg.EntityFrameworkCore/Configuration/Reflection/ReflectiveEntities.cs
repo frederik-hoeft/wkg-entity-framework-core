@@ -24,3 +24,11 @@ public readonly record struct ReflectiveProcedure(Type ProcedureType, Type? Cont
 /// <param name="TTo">The type of the target entity.</param>
 /// <param name="Connect">The method to configure the connection.</param>
 public readonly record struct ReflectiveConnection(Type Type, Type TFrom, Type TTo, MethodInfo? Connect);
+
+/// <summary>
+/// Represents a data seed that can be loaded using reflection.
+/// </summary>
+/// <param name="OwnerType">The type that owns the data seed method.</param>
+/// <param name="EntityType">The type of the entity for which the data seed is defined.</param>
+/// <param name="GetDataSeed">The method to get the data seed.</param>
+public readonly record struct ReflectiveDataSeed(Type OwnerType, Type EntityType, MethodInfo? GetDataSeed);

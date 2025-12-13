@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Wkg.EntityFrameworkCore.Configuration;
 
@@ -6,7 +7,7 @@ namespace Wkg.EntityFrameworkCore.Configuration;
 /// Represents a configuration for an abstract base model when using Table-Per-Concrete-Type (TPC) inheritance.
 /// </summary>
 /// <typeparam name="TParentClass">The type of the parent class.</typeparam>
-public interface IBaseModelConfiguration<TParentClass> where TParentClass : class, IModelConfiguration<TParentClass>
+public interface IBaseModelConfiguration<TParentClass> where TParentClass : class, IBaseModelConfiguration<TParentClass>
 {
     /// <summary>
     /// Configures shared properties of the base model.

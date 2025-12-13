@@ -2,8 +2,8 @@
 
     <!--.NET build settings-->
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <LangVersion>13</LangVersion>
+        <TargetFramework>net10.0</TargetFramework>
+        <LangVersion>14</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <!-- CI injected versioning -->
@@ -24,7 +24,7 @@
         </Description>
         <Company>WKG Software GmbH</Company>
         <Authors>WKG Software GmbH,Frederik Höft</Authors>
-        <Copyright>Copyright (c) WKG Software GmbH 2024</Copyright>
+        <Copyright>Copyright (c) WKG Software GmbH 2025</Copyright>
         <PackageIcon>logo.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageType>Dependency</PackageType>
@@ -42,9 +42,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Wkg" Version="[9.0.17748,9.1)" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="[9.0.1,9.1)" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="[9.0.1,9.1)" />
+        <PackageReference Include="Wkg" Version="[10.0.18957-rc,10.1)" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="[10.0.0,10.1)" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="[10.0.0,10.1)" />
     </ItemGroup>
 
     <ItemGroup>

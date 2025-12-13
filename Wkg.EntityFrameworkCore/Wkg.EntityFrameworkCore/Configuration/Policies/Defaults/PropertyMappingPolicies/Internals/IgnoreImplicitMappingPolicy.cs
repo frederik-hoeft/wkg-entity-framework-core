@@ -7,10 +7,9 @@ internal readonly struct IgnoreImplicitMappingPolicy : IMappingPolicy
 {
     public void Audit(IMutableEntityType entityType)
     {
-        IMutableProperty[] unmappedProperties = entityType
+        IMutableProperty[] unmappedProperties = [.. entityType
             .GetDeclaredProperties()
-            .Where(p => !p.GetAnnotations().Any())
-            .ToArray();
+            .Where(p => !p.GetAnnotations().Any())];
 
         if (unmappedProperties.Length > 0)
         {
@@ -21,7 +20,7 @@ internal readonly struct IgnoreImplicitMappingPolicy : IMappingPolicy
                 {
                     Log.WriteWarning($"Property {implicitProperty.Name} is an indexed property and will be removed from the containing index(es).");
                     // take a copy of the indexes to avoid modifying the collection while iterating
-                    IMutableIndex[] indexes = implicitProperty.GetContainingIndexes().ToArray();
+                    IMutableIndex[] indexes = [.. implicitProperty.GetContainingIndexes()];
                     foreach (IMutableIndex index in indexes)
                     {
                         entityType.RemoveIndex(index);
@@ -31,7 +30,7 @@ internal readonly struct IgnoreImplicitMappingPolicy : IMappingPolicy
                 {
                     Log.WriteWarning($"Property {implicitProperty.Name} is a foreign key property and will be removed from the containing foreign key(s).");
                     // take a copy of the foreign keys to avoid modifying the collection while iterating
-                    IMutableForeignKey[] fkeys = implicitProperty.GetContainingForeignKeys().ToArray();
+                    IMutableForeignKey[] fkeys = [.. implicitProperty.GetContainingForeignKeys()];
                     foreach (IMutableForeignKey fkey in fkeys)
                     {
                         entityType.RemoveForeignKey(fkey);

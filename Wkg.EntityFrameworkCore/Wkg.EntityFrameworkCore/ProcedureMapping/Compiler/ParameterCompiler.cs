@@ -13,7 +13,7 @@ public interface IParameterCompiler<out TCompiledParameter> where TCompiledParam
     /// <summary>
     /// Compiles the parameter builder into the IL code necessary to load the parameter from the I/O container and store results after the ADO.NET call.
     /// </summary>
-    public TCompiledParameter Compile();
+    TCompiledParameter Compile();
 }
 
 /// <summary>

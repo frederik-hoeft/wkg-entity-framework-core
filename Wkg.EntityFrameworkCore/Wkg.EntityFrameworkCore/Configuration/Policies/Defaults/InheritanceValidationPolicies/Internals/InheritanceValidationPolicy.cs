@@ -2,7 +2,7 @@
 
 namespace Wkg.EntityFrameworkCore.Configuration.Policies.Defaults.InheritanceValidationPolicies.Internals;
 
-internal class InheritanceValidationPolicy(InheritanceValidationOptions options) : IEntityPolicy
+internal sealed class InheritanceValidationPolicy(InheritanceValidationOptions options) : IEntityPolicy
 {
     public void Audit(IMutableEntityType entityType)
     {

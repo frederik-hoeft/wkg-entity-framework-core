@@ -1,12 +1,11 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Wkg.EntityFrameworkCore.DataTypes;
 
 namespace Wkg.EntityFrameworkCore.Tests.DataTypes;
 
 [TestClass]
-public class UuidTests
+public sealed class UuidTests
 {
     [TestMethod]
     public void ParseTest()
@@ -15,7 +14,7 @@ public class UuidTests
         Uuid result = Uuid.ParseUnsafe(uuid);
         // pointer cast to byte array
         ReadOnlySpan<byte> bytes = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<Uuid, byte>(ref result), 16);
-        Assert.AreEqual(uuid.Replace("-", ""), Convert.ToHexString(bytes).ToLowerInvariant());
+        Assert.AreEqual(uuid.Replace("-", ""), Convert.ToHexString(bytes), ignoreCase: true);
     }
 
     [TestMethod]
@@ -25,7 +24,7 @@ public class UuidTests
         Assert.IsTrue(Uuid.TryParse(uuid, out Uuid result));
         // pointer cast to byte array
         ReadOnlySpan<byte> bytes = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<Uuid, byte>(ref result), 16);
-        Assert.AreEqual(uuid.Replace("-", ""), Convert.ToHexString(bytes).ToLowerInvariant());
+        Assert.AreEqual(uuid.Replace("-", ""), Convert.ToHexString(bytes), ignoreCase: true);
 
         // invalid length
         Assert.IsFalse(Uuid.TryParse("123e4567-e89b-12d3-a456-42661417400", out _));
@@ -53,9 +52,9 @@ public class UuidTests
             '-',
             .. Convert.ToHexString(bytes[10..])
         ];
-        string expected = new string(chars).ToLowerInvariant();
+        string expected = new(chars);
         Uuid result = new(bytes);
-        Assert.AreEqual(expected, result.ToString());
+        Assert.AreEqual(expected, result.ToString(), ignoreCase: true);
     }
 
     [TestMethod]

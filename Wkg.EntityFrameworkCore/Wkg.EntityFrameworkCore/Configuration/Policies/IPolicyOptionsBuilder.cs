@@ -30,5 +30,5 @@ public interface IPolicyOptionsBuilder
     /// <summary>
     /// Builds the entity policies.
     /// </summary>
-    IEntityPolicy[] Build();
+    internal protected IEntityPolicy[] Build();
 }

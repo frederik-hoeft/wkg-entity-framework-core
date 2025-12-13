@@ -1,14 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Wkg.EntityFrameworkCore.Extensions;
+﻿namespace Wkg.EntityFrameworkCore.Configuration;
 
-namespace Wkg.EntityFrameworkCore.Configuration;
-
-/// <summary>
-/// Represents a many to many connection between two entities that are reflectively configured through <see cref="ModelBuilderExtensions.LoadReflectiveModels(ModelBuilder, Action{IModelOptionsBuilder}?)"/>.
-/// </summary>
-/// <typeparam name="TConnection">The type of the implementing connection entity.</typeparam>
-/// <typeparam name="TLeft">The type of the left entity.</typeparam>
-/// <typeparam name="TRight">The type of the right entity.</typeparam>
+/// <inheritdoc cref="IDiscoverableModelConnection{TConnection, TLeft, TRight}"/>
+[Obsolete($"{DeprecationNotice.INTERFACE_REMOVAL} Use IDiscoverableModelConnection<TConnection, TLeft, TRight> instead.")]
 public interface IReflectiveModelConnection<TConnection, TLeft, TRight> : IModelConnection<TConnection, TLeft, TRight>
     where TConnection : class, IReflectiveModelConnection<TConnection, TLeft, TRight>
     where TLeft : class, IReflectiveModelConfiguration<TLeft>

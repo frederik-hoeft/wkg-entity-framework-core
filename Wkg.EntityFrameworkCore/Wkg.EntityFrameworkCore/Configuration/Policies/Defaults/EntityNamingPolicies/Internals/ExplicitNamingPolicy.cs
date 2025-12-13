@@ -18,12 +18,14 @@ internal abstract class ExplicitNamingPolicy : IEntityNamingPolicy
         return false;
     }
 
-    protected static IMutableProperty[] GetImplicitProperties(IMutableEntityType entityType) => entityType
+    protected static IMutableProperty[] GetImplicitProperties(IMutableEntityType entityType) => 
+    [
+        .. entityType
         .GetDeclaredProperties()
         .Where(p => !p.HasAnnotation(annotation => annotation is RelationalAnnotationNames.ColumnName)
             // Ignore shadow properties (e.g. for TPT inheritance)
             && !p.IsShadowProperty())
-        .ToArray();
+    ];
 
     public abstract void Audit(IMutableEntityType entityType);
 }

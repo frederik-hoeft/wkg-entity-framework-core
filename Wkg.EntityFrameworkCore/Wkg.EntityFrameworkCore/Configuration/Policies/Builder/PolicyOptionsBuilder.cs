@@ -2,7 +2,7 @@
 
 namespace Wkg.EntityFrameworkCore.Configuration.Policies.Builder;
 
-internal class PolicyOptionsBuilder : IPolicyOptionsBuilder
+internal sealed class PolicyOptionsBuilder : IPolicyOptionsBuilder
 {
     /// <summary>
     /// A lookup of policies by builder type.
